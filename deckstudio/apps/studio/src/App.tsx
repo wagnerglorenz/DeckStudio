@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { api } from "./api";
+import { Button, Card, DeckLogo, KpiCard, StatusPill } from "./design-system";
 import type {
   ActionConfig,
   ActionStep,
@@ -12,7 +13,7 @@ import type {
   TileConfig,
 } from "./types";
 
-type TabId = "editor" | "themes" | "profiles" | "sources" | "health";
+type TabId = "editor" | "themes" | "profiles" | "sources" | "health" | "about";
 
 const GRID_KEYS: string[] = [];
 for (let r = 0; r < 3; r++) {
@@ -248,9 +249,9 @@ export default function App() {
   if (!cfg) {
     return (
       <div className="app-shell" style={{ alignItems: "center", justifyContent: "center", gap: 12 }}>
-        <div className="brand-badge" style={{ width: 48, height: 48, fontSize: 22 }}>D</div>
+        <DeckLogo size={52} />
         <h2>Conectando ao DeckStudio Engine (127.0.0.1:19876)...</h2>
-        <p style={{ color: "#94A3B8", fontSize: 13 }}>Certifique-se de que o <code>deck-engine.exe</code> está rodando na bandeja.</p>
+        <p style={{ color: "var(--ds-text-muted)", fontSize: 13 }}>Certifique-se de que o <code>deck-engine.exe</code> está rodando na bandeja.</p>
       </div>
     );
   }
@@ -260,27 +261,24 @@ export default function App() {
       {/* Top Status Bar */}
       <div className="status-bar">
         <div className="brand">
-          <div className="brand-badge">D</div>
+          <DeckLogo size={26} />
           <strong>DeckStudio</strong>
-          <span className="pill">AJAZZ AKP153E · HID 0300:1010 (512B)</span>
+          <StatusPill>v0.2.0 · HID 0300:1010 (512B)</StatusPill>
         </div>
         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
-          <span className="pill">
-            <span className={`dot ${health?.hid_connected ? "green" : "red"}`} />
+          <StatusPill dot={health?.hid_connected ? "green" : "red"}>
             Engine: {health?.ram_mb.toFixed(1) ?? "?"} MB RAM
-          </span>
-          <span className="pill">
-            <span className={`dot ${health?.nic_discards === 0 ? "green" : "cyan"}`} />
+          </StatusPill>
+          <StatusPill dot={health?.nic_discards === 0 ? "green" : "cyan"}>
             Descartes NIC: {health?.nic_discards ?? 0}
-          </span>
-          <span className="pill">
-            <span className={`dot ${health?.obs_connected ? "green" : "gray"}`} />
+          </StatusPill>
+          <StatusPill dot={health?.obs_connected ? "green" : "gray"}>
             OBS v5: {health?.obs_connected ? "Conectado" : "Offline"}
-          </span>
+          </StatusPill>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          {toast && <span className="pill" style={{ borderColor: "#22D3EE", color: "#22D3EE" }}>{toast}</span>}
-          <span style={{ fontSize: 11.5, color: "#64748B" }}>Fechar editor = 0 MB WebView2</span>
+          {toast && <StatusPill accent="var(--ds-brand-cyan)">{toast}</StatusPill>}
+          <span style={{ fontSize: 11.5, color: "var(--ds-text-subtle)" }}>Fechar editor = 0 MB WebView2</span>
         </div>
       </div>
 
@@ -293,6 +291,7 @@ export default function App() {
             { id: "profiles" as TabId, label: "Perfis", code: "⚡" },
             { id: "sources" as TabId, label: "Fontes", code: "🔌" },
             { id: "health" as TabId, label: "Saúde", code: "♡" },
+            { id: "about" as TabId, label: "Sobre", code: "ⓘ" },
           ].map((item) => (
             <button
               key={item.id}
@@ -1047,35 +1046,40 @@ export default function App() {
           {tab === "health" && (
             <div className="panel-scroll">
               <div className="kpi-grid">
-                <div className="kpi">
-                  <div className="kpi-lbl">RAM do Engine (24/7)</div>
-                  <div className="kpi-val" style={{ color: "#22C55E" }}>{health?.ram_mb.toFixed(1) ?? "0"} MB</div>
-                  <div style={{ fontSize: 11, color: "#64748B" }}>AJAZZ oficial: ~252–450 MB</div>
-                </div>
-                <div className="kpi">
-                  <div className="kpi-lbl">Envio HID (512B)</div>
-                  <div className="kpi-val">{health?.hid_tiles_per_s.toFixed(1) ?? "0"} /s</div>
-                  <div style={{ fontSize: 11, color: "#64748B" }}>Rate limit 15/s · Hash diff</div>
-                </div>
-                <div className="kpi">
-                  <div className="kpi-lbl">Descartes Realtek</div>
-                  <div className="kpi-val" style={{ color: "#22C55E" }}>{health?.nic_discards ?? 0}</div>
-                  <div style={{ fontSize: 11, color: "#64748B" }}>{health?.nic_name || "NIC Ethernet"}</div>
-                </div>
-                <div className="kpi">
-                  <div className="kpi-lbl">OBS WebSocket v5</div>
-                  <div className="kpi-val" style={{ fontSize: 18, color: health?.obs_connected ? "#22C55E" : "#94A3B8" }}>
-                    {health?.obs_connected ? "CONECTADO" : "OFFLINE"}
-                  </div>
-                  <div style={{ fontSize: 11, color: "#64748B" }}>{health?.obs_scene || "---"}</div>
-                </div>
-                <div className="kpi">
-                  <div className="kpi-lbl">Clima Local</div>
-                  <div className="kpi-val" style={{ fontSize: 20 }}>
-                    {health?.weather_temp_c !== null && health?.weather_temp_c !== undefined ? `${health.weather_temp_c.toFixed(1)}°C` : "--"}
-                  </div>
-                  <div style={{ fontSize: 11, color: "#64748B" }}>{cfg.weather.city}</div>
-                </div>
+                <KpiCard
+                  label="RAM do Engine (24/7)"
+                  value={`${health?.ram_mb.toFixed(1) ?? "0"} MB`}
+                  hint="App oficial: ~252–450 MB"
+                  accent="var(--ds-semantic-success)"
+                />
+                <KpiCard
+                  label="Envio HID (512B)"
+                  value={`${health?.hid_tiles_per_s.toFixed(1) ?? "0"} /s`}
+                  hint="Rate limit 15/s · Hash diff"
+                />
+                <KpiCard
+                  label="Descartes Realtek"
+                  value={health?.nic_discards ?? 0}
+                  hint={health?.nic_name || "NIC Ethernet"}
+                  accent="var(--ds-semantic-success)"
+                />
+                <KpiCard
+                  label="OBS WebSocket v5"
+                  value={<span style={{ fontSize: 18 }}>{health?.obs_connected ? "CONECTADO" : "OFFLINE"}</span>}
+                  hint={health?.obs_scene || "---"}
+                  accent={health?.obs_connected ? "var(--ds-semantic-success)" : "var(--ds-text-muted)"}
+                />
+                <KpiCard
+                  label="Clima Local"
+                  value={
+                    <span style={{ fontSize: 20 }}>
+                      {health?.weather_temp_c !== null && health?.weather_temp_c !== undefined
+                        ? `${health.weather_temp_c.toFixed(1)}°C`
+                        : "--"}
+                    </span>
+                  }
+                  hint={cfg.weather.city}
+                />
               </div>
 
               <div className="grid-2">
@@ -1153,6 +1157,105 @@ export default function App() {
                     ))}
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* ==================== TAB 6: SOBRE & COMPATIBILIDADE ==================== */}
+          {tab === "about" && (
+            <div className="panel-scroll">
+              <Card>
+                <div className="about-hero">
+                  <DeckLogo size={76} />
+                  <div style={{ flex: 1 }}>
+                    <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--ds-text-bright)" }}>DeckStudio v0.2.0</h1>
+                    <p style={{ fontSize: 13.5, color: "var(--ds-text-muted)", marginTop: 4 }}>
+                      Alternativa nativa, leve e 100% gratuita ao software oficial da AJAZZ — sem WebView residente e com zero perda de pacotes em rede.
+                    </p>
+                    <div className="badge-row">
+                      <StatusPill dot="green" accent="var(--ds-semantic-success)">100% Gratuito</StatusPill>
+                      <StatusPill accent="var(--ds-brand-cyan)">Licença MIT</StatusPill>
+                      <StatusPill>Rust + Tauri v2</StatusPill>
+                      <StatusPill>0 MB WebView2 em idle</StatusPill>
+                      <StatusPill>Design System</StatusPill>
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: 8 }}>
+                    <Button variant="primary" onClick={() => setTab("editor")}>Abrir Editor</Button>
+                    <Button onClick={() => setTab("sources")}>Configurar Sensores</Button>
+                  </div>
+                </div>
+              </Card>
+
+              <div className="grid-2">
+                <Card title="Compatibilidade de Hardware">
+                  <p style={{ fontSize: 12.5, color: "var(--ds-text-muted)", lineHeight: 1.55 }}>
+                    Compatível com o protocolo HID vendor-defined (<code>usage_page &gt;= 0xFF00</code>, pacotes 512 bytes) utilizado no hardware de mesa com teclas LCD.
+                  </p>
+                  <table className="compat-table">
+                    <thead>
+                      <tr>
+                        <th>Modelo / Família</th>
+                        <th>VID : PID</th>
+                        <th>Layout / Status</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr>
+                        <td><strong>AJAZZ AKP153E</strong></td>
+                        <td><code>0300:1010</code></td>
+                        <td><StatusPill dot="green">Testado &amp; Verificado (5×3 + faixa 3×1)</StatusPill></td>
+                      </tr>
+                      <tr>
+                        <td>AJAZZ AKP153</td>
+                        <td><code>5548:6674</code></td>
+                        <td><StatusPill dot="cyan">OEM Mirabox 15+3 (Candidato)</StatusPill></td>
+                      </tr>
+                      <tr>
+                        <td>AJAZZ AKP153E / AKP153R (Rev.)</td>
+                        <td><code>0300:1020 / 3010 / 3011</code></td>
+                        <td><StatusPill dot="cyan">Revisões irmãs (Candidato)</StatusPill></td>
+                      </tr>
+                      <tr>
+                        <td>Mirabox HSV293S / HSV293SV3</td>
+                        <td><code>5548:6670 · 6603:1014 / 1005</code></td>
+                        <td><StatusPill dot="cyan">Plataforma base 15+3 (Candidato)</StatusPill></td>
+                      </tr>
+                      <tr>
+                        <td>Rebadges OEM Mirabox (15 teclas)</td>
+                        <td><code>Mars Gaming / Soomfon / Womier / RiseMode</code></td>
+                        <td><StatusPill dot="cyan">Em análise na doc</StatusPill></td>
+                      </tr>
+                      <tr>
+                        <td>AJAZZ AKP03 / VSDinside N3 · N4</td>
+                        <td><code>0300:1001 · 5548:1001 · 6603:1002/1007</code></td>
+                        <td><StatusPill dot="gray">Roadmap (Encoders rotativos)</StatusPill></td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </Card>
+
+                <Card title="Projeto, Arquitetura &amp; Licença MIT">
+                  <div className="row-box">
+                    <span>Autor &amp; Mantenedor</span>
+                    <strong>Wagner Gadea Lorenz</strong>
+                  </div>
+                  <div className="row-box">
+                    <span>Licença de Uso</span>
+                    <strong>MIT (100% Gratuita e Aberta)</strong>
+                  </div>
+                  <div className="row-box">
+                    <span>Arquitetura (Opção 2)</span>
+                    <span><code>deck-engine.exe</code> (bandeja) + <code>deck-studio.exe</code> (editor)</span>
+                  </div>
+                  <div className="row-box">
+                    <span>Fontes de Sensores</span>
+                    <span>AIDA64 · LibreHWM · HWiNFO64 · Win32 + NVML</span>
+                  </div>
+                  <div style={{ fontSize: 12, color: "var(--ds-text-muted)", lineHeight: 1.6, marginTop: 4 }}>
+                    Consulte <code>docs/COMPATIBILITY.md</code>, <code>docs/DESIGN_SYSTEM.md</code>, <code>docs/EVOLUTION.md</code> e os 10 diagramas Archify em <code>docs/archify/</code> antes de qualquer modificação. Projeto comunitário independente, sem afiliação oficial com AJAZZ ou Mirabox.
+                  </div>
+                </Card>
               </div>
             </div>
           )}

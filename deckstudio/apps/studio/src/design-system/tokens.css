@@ -1,0 +1,74 @@
+/* DeckStudio Design System — Tokens Semânticos */
+:root {
+  /* Fundos e superfícies */
+  --ds-bg-canvas: #0B0F19;
+  --ds-bg-shell: #0D1320;
+  --ds-bg-topbar: #0E1422;
+  --ds-bg-topbar-alt: #0E1525;
+  --ds-bg-card: #0F1727;
+  --ds-bg-elevated: #141F33;
+  --ds-bg-input: #162032;
+  --ds-bg-pill: #131C2E;
+  --ds-bg-btn: #1B2840;
+  --ds-bg-active: #16243D;
+  --ds-bg-deck-top: #1E2430;
+  --ds-bg-deck-bottom: #151922;
+  --ds-bg-slot: #0A0D12;
+  --ds-bg-strip: #030509;
+  --ds-bg-code: #070B12;
+
+  /* Bordas */
+  --ds-border-subtle: #1E293B;
+  --ds-border-default: #23314A;
+  --ds-border-strong: #2A3B58;
+  --ds-border-btn: #2E4266;
+  --ds-border-deck: #2F394D;
+  --ds-border-slot: #28354D;
+
+  /* Texto */
+  --ds-text-primary: #E2E8F0;
+  --ds-text-bright: #F1F5F9;
+  --ds-text-secondary: #CBD5E1;
+  --ds-text-muted: #94A3B8;
+  --ds-text-subtle: #64748B;
+
+  /* Marca e Estados */
+  --ds-brand-cyan: #22D3EE;
+  --ds-brand-sky: #38BDF8;
+  --ds-brand-blue: #2563EB;
+  --ds-brand-emerald: #22C55E;
+  --ds-brand-indigo: #6366F1;
+  --ds-semantic-success: #22C55E;
+  --ds-semantic-success-bg: #14532D;
+  --ds-semantic-success-fg: #DCFCE7;
+  --ds-semantic-danger: #EF4444;
+  --ds-semantic-danger-bg: #450A0A;
+  --ds-semantic-danger-fg: #FCA5A5;
+  --ds-semantic-warning: #EAB308;
+
+  /* Efeitos & Glows */
+  --ds-glow-cyan: 0 0 16px #22D3EE55;
+  --ds-glow-dot-cyan: 0 0 8px #22D3EE88;
+  --ds-glow-dot-green: 0 0 8px #22C55E88;
+
+  /* Tipografia */
+  --ds-font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  --ds-font-mono: Consolas, 'Cascadia Code', monospace;
+
+  /* Espaçamento */
+  --ds-space-1: 4px;
+  --ds-space-2: 8px;
+  --ds-space-3: 12px;
+  --ds-space-4: 16px;
+  --ds-space-5: 20px;
+  --ds-space-6: 24px;
+
+  /* Raios */
+  --ds-radius-xs: 5px;
+  --ds-radius-sm: 8px;
+  --ds-radius-md: 11px;
+  --ds-radius-lg: 14px;
+  --ds-radius-xl: 16px;
+  --ds-radius-2xl: 20px;
+  --ds-radius-pill: 99px;
+}

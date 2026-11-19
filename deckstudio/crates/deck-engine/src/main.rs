@@ -1,4 +1,4 @@
-//! `deck-engine` — Daemon nativo 24/7 para AJAZZ AKP153E (HID + Sensores + OBS + Smart Profiles + Bandeja).
+//! `deck-engine` — Daemon nativo 24/7 para controladores Stream Dock compatíveis (HID + Sensores + OBS + Smart Profiles + Bandeja).
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 mod actions;
@@ -15,7 +15,6 @@ mod weather;
 use chrono::{Local, Timelike};
 use deck_core::{load_or_create_config, ActionConfig, ThemeConfig, TileConfig};
 use device::DeviceManager;
-use hid_proto::InputAction;
 use image::RgbImage;
 use obs::{ObsClient, ObsState};
 use render::{
@@ -48,12 +47,19 @@ fn make_tray_icon() -> Icon {
     let mut rgba = Vec::with_capacity(32 * 32 * 4);
     for y in 0..32u32 {
         for x in 0..32u32 {
-            let border = x < 3 || x >= 29 || y < 3 || y >= 29;
-            let center = (10..=21).contains(&x) && (10..=21).contains(&y);
-            if border {
+            // Squircle exterior (borda ciano -> verde)
+            let on_border = x < 3 || x >= 29 || y < 3 || y >= 29;
+            // 2 colunas x 3 linhas de mini teclas (esquerda/centro)
+            let in_key = (6..=11).contains(&x) || (13..=18).contains(&x);
+            let in_row = (6..=11).contains(&y) || (13..=18).contains(&y) || (20..=25).contains(&y);
+            // Faixa lateral direita estilo D
+            let in_strip = (20..=25).contains(&x) && (6..=25).contains(&y);
+            if on_border {
                 rgba.extend_from_slice(&[34, 211, 238, 255]); // #22D3EE
-            } else if center {
+            } else if in_strip {
                 rgba.extend_from_slice(&[34, 197, 94, 255]); // #22C55E
+            } else if in_key && in_row {
+                rgba.extend_from_slice(&[56, 189, 248, 255]); // #38BDF8
             } else {
                 rgba.extend_from_slice(&[13, 17, 23, 255]); // #0D1117
             }
@@ -437,7 +443,7 @@ fn main() {
     ) {
         Ok(d) => Arc::new(d),
         Err(e) => {
-            eprintln!("Erro ao abrir AKP153E: {e}");
+            eprintln!("Erro ao abrir dispositivo HID compatível: {e}");
             return;
         }
     };
@@ -585,7 +591,7 @@ fn main() {
 
     let _tray = TrayIconBuilder::new()
         .with_menu(Box::new(menu))
-        .with_tooltip("DeckStudio Engine (AJAZZ AKP153E)")
+        .with_tooltip("DeckStudio Engine")
         .with_icon(make_tray_icon())
         .build()
         .ok();
@@ -635,7 +641,7 @@ mod button_simulation_tests {
     use super::*;
     use crate::actions::{execute_action, NavCmd};
     use crate::device::index_to_grid;
-    use crate::hid_proto::{parse_input_report, INPUT_REQUEST_PREFIX};
+    use crate::hid_proto::{parse_input_report, InputAction, INPUT_REQUEST_PREFIX};
     use deck_core::{default_config, ActionStep, ObsConfig};
     use futures_util::{SinkExt, StreamExt};
     use serde_json::{json, Value};

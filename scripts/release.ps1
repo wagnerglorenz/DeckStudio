@@ -102,6 +102,10 @@ $CompatDoc = Join-Path $RepoRoot "docs\COMPATIBILITY.md"
 if (Test-Path $CompatDoc) {
     Copy-Item $CompatDoc (Join-Path $StageDir "COMPATIBILITY.md")
 }
+foreach ($extraDoc in @("DESIGN_SYSTEM.md", "EVOLUTION.md")) {
+    $dp = Join-Path $RepoRoot ("docs\" + $extraDoc)
+    if (Test-Path $dp) { Copy-Item $dp (Join-Path $StageDir $extraDoc) }
+}
 $RollbackReg = Join-Path $RepoRoot "rollback\restore_stream_dock_ajazz.reg"
 if (Test-Path $RollbackReg) {
     Copy-Item $RollbackReg (Join-Path $StageDir "restore_stream_dock_ajazz.reg")
@@ -145,8 +149,12 @@ if ($PublishGitHub) {
         if ($LASTEXITCODE -ne 0) { throw "Falha no git push" }
 
         $existsRel = $false
-        $null = gh release view "v$Version" 2>$null
-        if ($LASTEXITCODE -eq 0) { $existsRel = $true }
+        $prevEap = $ErrorActionPreference
+        $ErrorActionPreference = "Continue"
+        $null = gh release view "v$Version" 2>&1
+        $relExit = $LASTEXITCODE
+        $ErrorActionPreference = $prevEap
+        if ($relExit -eq 0) { $existsRel = $true }
 
         if ($existsRel) {
             gh release upload "v$Version" $ZipPath $SumFile --clobber

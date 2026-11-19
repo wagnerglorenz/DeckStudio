@@ -1,32 +1,60 @@
-# ajazz-monitor (StreamDeck)
+<p align="center">
+  <img src="deckstudio/assets/logo.svg" width="96" height="96" alt="DeckStudio Logo" />
+</p>
 
-Substituto leve em Python para o **Stream Dock AJAZZ** no **AJAZZ AKP153E** (`VID 0x0300`, `PID 0x1010`), sem navegador embutido e sem perda de pacotes na placa de rede.
+<h1 align="center">DeckStudio</h1>
 
-## Estrutura
-- `ajazz_monitor/device_proto.py` — protocolo HID vendor-defined (chunks de 512 bytes) e `sanitize_image()`.
-- `ajazz_monitor/device.py` — fila limitada (`max_tiles_per_s`), cache de hash e mapa físico verificado (`6×3`).
-- `ajazz_monitor/sensors.py` — leitura da memória compartilhada `AIDA64_SensorValues`, contadores de rede Windows (`GetIfTable`), cache de 30 s e vigia opcional do AIDA64.
-- `ajazz_monitor/render.py` — renderização Pillow com sparklines e botões de estado.
-- `ajazz_monitor/obs.py` — cliente OBS WebSocket v5 (`obsws-python`) com reconexão automática.
-- `ajazz_monitor/main.py` — loop principal e ícone na bandeja (`pystray`).
-- `config.yaml` — layout das páginas `monitor` e `obs`.
+<p align="center">
+  <strong>Alternativa nativa, ultraleve e 100% gratuita (Licença MIT) para controladores Stream Dock no Windows.</strong><br/>
+  Substitui softwares baseados em WebEngine/Electron por um daemon nativo em <b>Rust</b> na bandeja + editor visual em <b>Tauri v2 / React</b> com <b>0 MB de WebView2 ao fechar</b>.
+</p>
 
-## Executar
-Certifique-se de que o **Stream Dock AJAZZ** oficial esteja fechado:
+---
+
+## Por que usar o DeckStudio?
+
+- **100% Gratuito e Open Source ([MIT License](LICENSE)):** uso livre, sem telemetria fechada, assinatura ou bloatware.
+- **Zero perda de pacotes em jogos e streaming:** projetado para eliminar gargalos de DPC/rede causados por processos `QtWebEngineProcess.exe` (~252 MB) no driver Realtek — **0% de perda UDP em 300 Mbps (`iperf3`) e `delta = 0` descartes na NIC**.
+- **Consumo mínimo 24/7:** `deck-engine.exe` consome **`~18,5–20,3 MB` WorkingSet (`5,3–7,15 MB` memória privada)** e `0%` CPU idle; o editor `deck-studio.exe` encerra 100% dos processos `msedgewebview2` ao fechar.
+- **4 Fontes de Telemetria com Guias em Português e Fallback Automático:**
+  1. **AIDA64 Shared Memory** (`AIDA64_SensorValues`) + vigia automática de 45s.
+  2. **LibreHardwareMonitor** (`http://127.0.0.1:8085/data.json`, gratuito/open-source, backoff de 30s quando offline).
+  3. **HWiNFO64 Shared Memory** (`Global\HWiNFO_SENS_SM2`).
+  4. **Windows Nativo + NVIDIA NVML (`nvml.dll`)** sem precisar instalar apps externos (com standby automático do NVML quando outra fonte prioritária já lê GPU).
+- **Automação completa:** OBS WebSocket v5 (gravação, pausa, mudo, troca de cenas, status ao vivo), clima Open-Meteo, Smart Profiles por `SetWinEventHook` (`0%` polling), Hotkeys Win32, Soundboard, Webhooks e Multi-Actions.
+
+---
+
+## Compatibilidade de Hardware
+
+> Consulte o guia detalhado e o protocolo seguro em **[docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)**.
+
+- **Testado e Verificado em bancada:** **AJAZZ AKP153E** (`VID 0x0300 : PID 0x1010`, protocolo HID 512 bytes, grade 5×3 + faixa lateral 3×1).
+- **Modelos Similares (Família OEM Mirabox — Candidatos em análise):**
+  - **AJAZZ AKP153** (`5548:6674`) e revisões **AKP153E / AKP153R** (`0300:1020`, `3010`, `3011`)
+  - **Mirabox StreamDock HSV293S** (`5548:6670`) e **HSV293SV3 / 293V3** (`6603:1014`, `1005`)
+  - Rebadges OEM Mirabox de 15 teclas (**Mars Gaming**, **Soomfon**, **Womier**, **RiseMode**, **Monstargear**)
+- **Roadmap Futuro:** modelos com encoders rotativos (**AJAZZ AKP03**, **VSDinside StreamDock N3 / N4**).
+
+---
+
+## Arquitetura, Design System & Documentação
+
+- **Design System (`tokens.css` + componentes React):** [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)
+- **Histórico & Benchmarks de Evolução:** [docs/EVOLUTION.md](docs/EVOLUTION.md) & [CHANGELOG.md](CHANGELOG.md)
+- **Análise de Impacto (Todos os 10 Diagramas Archify):** [docs/archify/README.md](docs/archify/README.md)
+
+## Compilação, Testes e Release
 
 ```powershell
-.\.venv\Scripts\python.exe -m ajazz_monitor.main --config config.yaml
+# Rodar suíte completa (16 testes, incluindo mock OBS WebSocket v5)
+Set-Location deckstudio
+cargo test --workspace
+
+# Gerar Release versionado (compila, testa, empacota ZIP + SHA256 + Tag + GitHub Release)
+Set-Location ..
+.\scripts\release.ps1 -Version "0.2.0" -PublishGitHub
 ```
 
-Para usar senha no OBS WebSocket, defina a variável de ambiente `OBS_WS_PASSWORD`.
-Para ativar a vigia do AIDA64 (`schtasks` na tarefa `"AIDA64 AutoStart"`), adicione `--watchdog`.
-
-## Testes
-```powershell
-.\.venv\Scripts\python.exe -m pytest -v
-```
-
-## Voltar para o app oficial (Rollback)
-1. Clique com o botão direito no ícone da bandeja do `ajazz-monitor` e escolha **Sair**.
-2. Caso tenha desativado o app oficial da inicialização, reimporte o `.reg` salvo e devolva `iniciar-ponte.vbs` para a pasta Inicializar.
-3. Abra `C:\Program Files (x86)\Stream Dock AJAZZ Global\Stream Dock AJAZZ.exe`.
+## Rollback para o Software Oficial
+Se precisar restaurar a inicialização original, importe [rollback/restore_stream_dock_ajazz.reg](rollback/restore_stream_dock_ajazz.reg). O protótipo original em Python permanece arquivado em [ajazz_monitor/](ajazz_monitor/) para referência técnica.

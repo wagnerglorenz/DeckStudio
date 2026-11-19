@@ -1,0 +1,3 @@
+d378effa40a7139ddab6dc414dba93f4f6b1efd7b563e65c963789e66c7de590 *deck-engine.exe
+4a5b632315143c7fd4a83c8bcc0b03dc165d5aa3ea62b3a2da4b2fcae9302058 *deck-studio.exe
+75a9bed277ae694dba6ceba3d4f8513373968972ab60d33b106e2e57c0d80036 *DeckStudio-v0.1.0-win-x64.zip

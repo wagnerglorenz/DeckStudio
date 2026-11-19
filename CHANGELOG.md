@@ -2,6 +2,20 @@
 
 Todas as mudanças notáveis do projeto são registradas aqui seguindo Semantic Versioning (`vX.Y.Z`).
 
+## [0.2.0] - 2026-11-19
+
+### Marca, Design System & Experiência do Usuário
+- **Identidade Visual Própria:** criada logomarca vetorial oficial do **DeckStudio** ([logo.svg](deckstudio/assets/logo.svg)), ícone multi-resolução Windows ([icon.ico](deckstudio/apps/studio/src-tauri/icons/icon.ico) `16..256 px`) e novo ícone de bandeja pixel-art em [main.rs](deckstudio/crates/deck-engine/src/main.rs).
+- **Identificação Limpa (Sem Marca Específica no Título):** removido `AJAZZ AKP153E` do título da janela (`DeckStudio`), título HTML, cabeçalho do editor e tooltip da bandeja (`DeckStudio Engine`).
+- **Nova Aba `Sobre` + Compatibilidade:** adicionada tela dedicada em [App.tsx](deckstudio/apps/studio/src/App.tsx) destacando o projeto como **alternativa 100% gratuita (Licença MIT)** e exibindo a tabela de modelos compatíveis verificados e candidatos OEM Mirabox.
+- **Design System Estruturado:** criados [tokens.css](deckstudio/apps/studio/src/design-system/tokens.css) (`--ds-*`), [components.tsx](deckstudio/apps/studio/src/design-system/components.tsx) (`DeckLogo`, `Button`, `StatusPill`, `Card`, `KpiCard`, `Field`) e documentação em [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md).
+
+### Compatibilidade, Evolução & Análise de Impacto Archify
+- Pesquisa e documentação detalhada de hardware compatível e protocolos similares (`AJAZZ AKP153 / AKP153E / AKP153R`, `Mirabox HSV293S / V3`, `VSDinside N3 / N4`, `AKP03`) em [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md).
+- Novo artefato permanente de evolução e benchmarks em [docs/EVOLUTION.md](docs/EVOLUTION.md).
+- Suite completa de **10 diagramas Archify validados** (`architecture`, `workflow`, `sequence`, `dataflow`, `lifecycle`, `erd`, `class`, `tree`, `timeline`, `waterfall`) + matriz de análise de impacto em [docs/archify/README.md](docs/archify/README.md).
+- Removido aviso de importação não usada (`hid_proto::InputAction`) na build release do `deck-engine`.
+
 ## [0.1.0] - 2026-11-19
 
 ### Diagnóstico Inicial & Protótipo Python (`2026-11-18`)
