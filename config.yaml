@@ -1,0 +1,87 @@
+device:
+  brightness: 60
+  refresh_ms: 1000
+  max_tiles_per_s: 15
+
+active_theme: llm_dash
+
+weather:
+  city: "Santa Maria"
+  lat: -29.6842
+  lon: -53.8069
+  refresh_minutes: 15
+
+themes:
+  ajazz:
+    style: ajazz
+    background: "#12142D"
+    chart: "#F700E7"
+    text: "#FFFFFF"
+    temp_colors: true
+
+  llm_dash:
+    style: llm_dash
+    background: "#0D1117"
+    card_bg: "#162032"
+    card_border: "#24324A"
+    chart: "#22D3EE"
+    text: "#FFFFFF"
+    muted: "#94A3B8"
+    accent: "#22D3EE"
+    temp_colors: true
+
+pages:
+  monitor:
+    # Linha 0 — GPU
+    "0,0": {type: sensor, title: "GPU",      id: SGPU1UTI,      unit: "%",    min: 0, max: 100,  group: gpu,      style: ring}
+    "1,0": {type: sensor, title: "GPU °C",   id: TGPU1DIO,      unit: "°",    min: 0, max: 100,  group: gpu,      is_temp: true}
+    "2,0": {type: sensor, title: "GPU Watt", id: PGPU1,         unit: "W",    min: 0, max: 450,  group: gpu}
+    "3,0": {type: sensor, title: "VRAM",     id: VRAM_PCT,      unit: "%",    min: 0, max: 100,  group: vram,     style: ring}
+    "4,0": {type: sensor, title: "GPU Fan",  id: DGPU1,         unit: "%",    min: 0, max: 100,  group: gpu,      style: ring}
+    "5,0": {type: sensor, widget: clock}
+
+    # Linha 1 — CPU & RAM
+    "0,1": {type: sensor, title: "CPU",      id: SCPUUTI,       unit: "%",    min: 0, max: 100,  group: cpu,      style: ring}
+    "1,1": {type: sensor, title: "CPU °C",   id: TCPU,          unit: "°",    min: 0, max: 100,  group: cpu,      is_temp: true}
+    "2,1": {type: sensor, title: "CPU Watt", id: PCPUPKG,       unit: "W",    min: 0, max: 200,  group: cpu}
+    "3,1": {type: sensor, title: "RAM",      id: SMEMUTI,       unit: "%",    min: 0, max: 100,  group: ram,      style: ring}
+    "4,1": {type: sensor, title: "Core",     id: SCPUCLK,       unit: "MHz",  min: 0, max: 5500, group: cpu}
+    "5,1": {type: sensor, widget: obs_status}
+
+    # Linha 2 — Rede (DOWN / FPS / UP) + OBS + Navegação + Clima
+    "0,2": {type: sensor, title: "DOWN",     id: NET_DL,        unit: "Mbps", min: 0, max: 1000, group: net_down}
+    "1,2": {type: sensor, title: "FPS",      id: SRTSSFPS,      unit: "",     min: 0, max: 240,  group: fps}
+    "2,2": {type: sensor, title: "UP",       id: NET_UL,        unit: "Mbps", min: 0, max: 500,  group: net_up}
+    "3,2": {type: button, widget: obs_logo,  action: {page: obs}}
+    "4,2": {type: button, widget: nav_next,  action: {page: next}}
+    "5,2": {type: sensor, widget: weather}
+
+  obs:
+    # Linha 0 — Gravar/Parar (1 clique), Pausar/Retomar, Som Jogo + 2 cenas extras
+    "0,0": {type: button, title: "Gravar",   icon: record,   action: {obs: toggle_record}, state: record}
+    "1,0": {type: button, title: "Pausar",   icon: pause,    action: {obs: toggle_record_pause}, state: record_pause}
+    "2,0": {type: button, title: "Som Jogo", icon: audio,    action: {obs: toggle_mute, input: "Áudio do Jogo (A50 X Game)"}, state: mute}
+    "3,0": {type: button, title: "Track",    icon: track,    subtitle: "TRAINEE", action: {obs: scene, name: "AC-TrackTrainee"}}
+    "4,0": {type: button, title: "Logo",     icon: logo,     subtitle: "CANAL",   action: {obs: scene, name: "logo canal"}}
+    "5,0": {type: sensor, widget: clock}
+
+    # Linha 1 — Cenas 1 a 5 do OBS
+    "0,1": {type: button, title: "1.Studio", icon: studio,   subtitle: "ACC",   action: {obs: scene, name: "1. ACC - Pro Studio (16:9)"}}
+    "1,1": {type: button, title: "2.Jogo",   icon: game_cam, subtitle: "CAM",   action: {obs: scene, name: "2. ACC - Jogo Puro + Cam Sobreposta (16:9)"}}
+    "2,1": {type: button, title: "3.Split",  icon: split,    subtitle: "ACC",   action: {obs: scene, name: "3. ACC - Lateral Split (16:9)"}}
+    "3,1": {type: button, title: "4.Foco",   icon: focus,    subtitle: "16:9",  action: {obs: scene, name: "4. Vídeos - Foco Total (Centro 16:9)"}}
+    "4,1": {type: button, title: "5.CmdCtr", icon: multi,    subtitle: "MULTI", action: {obs: scene, name: "5. Vídeos - Command Center (Multi-Screen)"}}
+    "5,1": {type: sensor, widget: obs_status}
+
+    # Linha 2 — Saúde CPU/GPU + Cena 6 + Voltar (<) + Trocar Tema + Clima
+    "0,2": {type: sensor, widget: cpu_health}
+    "1,2": {type: sensor, widget: gpu_health}
+    "2,2": {type: button, title: "6.Cam 4K", icon: cam4k,    subtitle: "CHEIA",  action: {obs: scene, name: "6. Câmera Tela Cheia (4K)"}}
+    "3,2": {type: button, widget: nav_prev,  action: {page: monitor}}
+    "4,2": {type: button, title: "Discord",  icon: discord,  subtitle: "ABRIR", action: {run: ["C:\\Users\\wagne\\AppData\\Local\\Discord\\Update.exe", "--processStart", "Discord.exe"]}}
+    "5,2": {type: sensor, widget: weather}
+
+obs:
+  host: 127.0.0.1
+  port: 4455
+  password_env: OBS_WS_PASSWORD

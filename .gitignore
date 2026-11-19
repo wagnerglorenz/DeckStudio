@@ -1,0 +1,22 @@
+# Build artifacts (Rust / Tauri / Vite)
+deckstudio/target/
+deckstudio/apps/studio/src-tauri/target/
+deckstudio/apps/studio/node_modules/
+deckstudio/apps/studio/dist/
+deckstudio/bin/*.exe
+deckstudio/bin/*.pdb
+
+# Releases empacotadas
+releases/**/*.zip
+
+# Python local env & caches
+.venv/
+__pycache__/
+.pytest_cache/
+*.pyc
+
+# Logs e locks temporários
+*.log
+.archify-delivery-lock.json
+*.delivery-pending.json
+docs/archify/**/review-*/
