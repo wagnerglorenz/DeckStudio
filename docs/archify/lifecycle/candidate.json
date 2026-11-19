@@ -1,0 +1,141 @@
+{
+  "schema_version": 3,
+  "diagram_type": "lifecycle",
+  "meta": {
+    "title": "DeckStudio — Ciclo de Vida em Execução (Engine + HID + OBS)",
+    "locale": "pt-BR",
+    "output": "docs/archify/lifecycle/deckstudio-lifecycle.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/wagnerglorenz/DeckStudio.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "ba55fa104da70fb050df0ce3a69913017efdf260"
+    }
+  },
+  "mainPath": ["boot", "check_conflict", "hid_open", "active_monitor", "stopped"],
+  "states": [
+    {
+      "id": "boot",
+      "type": "start",
+      "label": "Boot",
+      "sublabel": "Tokio + config.json",
+      "step": "01",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/main.rs", "line": 398, "end_line": 415, "label": "Runtime e config" }
+      ]
+    },
+    {
+      "id": "check_conflict",
+      "type": "decision",
+      "label": "Conflito HID",
+      "sublabel": "Toolhelp32",
+      "step": "02",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/hid_proto.rs", "line": 36, "end_line": 68, "label": "find_official_app_processes" }
+      ]
+    },
+    {
+      "id": "hid_open",
+      "type": "active",
+      "label": "HID Aberto",
+      "sublabel": "512B + brilho",
+      "step": "03",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/device.rs", "line": 73, "end_line": 94, "label": "open + clear_all" }
+      ]
+    },
+    {
+      "id": "active_monitor",
+      "type": "active",
+      "label": "Monitorando",
+      "sublabel": "1Hz + SmartProfile",
+      "tag": "NVML standby",
+      "step": "04",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/main.rs", "line": 499, "end_line": 538, "label": "Loop sensores/render" }
+      ]
+    },
+    {
+      "id": "stopped",
+      "type": "neutral",
+      "label": "Encerrado",
+      "sublabel": "HID fechado",
+      "tag": "Menu Sair",
+      "step": "05"
+    },
+    {
+      "id": "conflict_exit",
+      "type": "failure",
+      "label": "Abortado",
+      "sublabel": "App oficial ativo",
+      "tag": "saída segura"
+    },
+    {
+      "id": "engine_paused",
+      "type": "waiting",
+      "label": "Pausado",
+      "sublabel": "Render suspenso",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/main.rs", "line": 543, "end_line": 545, "label": "paused sleep" }
+      ]
+    },
+    {
+      "id": "obs_live",
+      "type": "success",
+      "label": "OBS Conectado",
+      "sublabel": "WS v5 :4455",
+      "tag": "op=5 eventos",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/obs.rs", "line": 152, "end_line": 178, "label": "ObsClient Identified" }
+      ]
+    },
+    {
+      "id": "obs_recording",
+      "type": "active",
+      "label": "OBS Gravando",
+      "sublabel": "Tecla REC ativa",
+      "tag": "vermelho"
+    },
+    {
+      "id": "obs_paused",
+      "type": "waiting",
+      "label": "OBS Pausado",
+      "sublabel": "Estado warning",
+      "tag": "PAUSADO"
+    }
+  ],
+  "transitions": [
+    { "id": "t1", "from": "boot", "to": "check_conflict", "label": "ok" },
+    { "id": "t2", "from": "check_conflict", "to": "hid_open", "label": "livre" },
+    { "id": "t3", "from": "hid_open", "to": "active_monitor", "label": "ativo", "variant": "emphasis" },
+    { "id": "t4", "from": "active_monitor", "to": "stopped", "label": "sair" },
+    { "id": "t5", "from": "check_conflict", "to": "conflict_exit", "label": "conflito", "variant": "security" },
+    { "id": "t6", "from": "active_monitor", "to": "engine_paused", "label": "pausar", "variant": "dashed" },
+    { "id": "t7", "from": "engine_paused", "to": "active_monitor", "label": "retomar" },
+    { "id": "t8", "from": "active_monitor", "to": "obs_live", "label": "OBS on" },
+    { "id": "t9", "from": "obs_live", "to": "active_monitor", "label": "OBS off", "variant": "dashed" },
+    { "id": "t10", "from": "obs_live", "to": "obs_recording", "label": "REC", "variant": "emphasis" },
+    { "id": "t11", "from": "obs_recording", "to": "obs_paused", "label": "pausa" },
+    { "id": "t12", "from": "obs_paused", "to": "obs_recording", "label": "retoma" },
+    { "id": "t13", "from": "obs_recording", "to": "obs_live", "label": "para" }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Guarda HID Exclusiva",
+      "items": [
+        "Verifica Stream Dock AJAZZ.exe antes de abrir 0300:1010",
+        "Encerramento limpo envia flush e fecha o handle USB HID"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Estado OBS Independente",
+      "items": [
+        "Monitoramento continua ativo em 0% perda mesmo com OBS fechado",
+        "Eventos WebSocket op=5 alternam Gravar/Pausar e atualizam as teclas"
+      ]
+    }
+  ]
+}

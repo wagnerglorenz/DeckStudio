@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "dataflow",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\dataflow\\candidate.json",
+    "sha256": "f44da69ad39e6856d78fbe6bc7b1ca479218a2c22f68a0d30dc2baeeb695a073",
+    "bytes": 6160
+  },
+  "artifact": {
+    "path": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\dataflow\\deckstudio-dataflow.html",
+    "sha256": "3c94e7c8151dc1baa3fb5cb8db49109679a396f1f8838941d9b507ec525da55b",
+    "bytes": 825577
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [
+    {
+      "code": "i18n/locale-fallback",
+      "severity": "warning",
+      "message": "meta.locale \"pt-BR\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+      "subject": {
+        "diagramType": "dataflow",
+        "path": "/meta/locale"
+      },
+      "evidence": {
+        "locale": "pt-BR",
+        "bundledLocales": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "es",
+          "ko",
+          "ar"
+        ]
+      },
+      "supportedFixes": [
+        "Supply meta.translations for this locale.",
+        "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\dataflow\\deckstudio-dataflow.finalize.json",
+    "summaryReceipt": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\dataflow\\deckstudio-dataflow.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\dataflow\\deckstudio-dataflow.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-11-19T15:12:23.693Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 3152,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "de77450f-ea70-4261-aab1-31c8ef00c007",
+  "status": "current",
+  "command": "deliver",
+  "type": "architecture",
+  "input": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\architecture\\candidate.json",
+  "output": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\architecture\\deckstudio-architecture.html",
+  "specification": {
+    "sha256": "ef12520d3bfd032942c1f7a25bec030e68fbf88ab45c037a41e9e8cee257b925",
+    "bytes": 8136
+  },
+  "artifact": {
+    "sha256": "2162cc2a9a81b8b16dc199c111ae208ebbb029c312984790ea51bf4159336385",
+    "bytes": 838690
+  }
+}

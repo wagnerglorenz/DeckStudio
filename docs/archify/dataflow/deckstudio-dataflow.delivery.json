@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "e8ae085e-5939-4e9b-a291-e785eea2aed4",
+  "status": "current",
+  "command": "deliver",
+  "type": "dataflow",
+  "input": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\dataflow\\candidate.json",
+  "output": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\dataflow\\deckstudio-dataflow.html",
+  "specification": {
+    "sha256": "f44da69ad39e6856d78fbe6bc7b1ca479218a2c22f68a0d30dc2baeeb695a073",
+    "bytes": 6160
+  },
+  "artifact": {
+    "sha256": "3c94e7c8151dc1baa3fb5cb8db49109679a396f1f8838941d9b507ec525da55b",
+    "bytes": 825577
+  }
+}

@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "waterfall",
+  "quality": "showcase",
+  "specification": {
+    "path": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\waterfall\\candidate.json",
+    "sha256": "617db8f22d57da70e45f8c2175148976141b0287e8c4d999140e583898a495d3",
+    "bytes": 3032
+  },
+  "artifact": {
+    "path": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\waterfall\\deckstudio-waterfall.html",
+    "sha256": "3768eb2f84ed58a6464cd8e1a36098c0016933b895244a5fb85eafb473ac59fa",
+    "bytes": 818142
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [
+    {
+      "code": "i18n/locale-fallback",
+      "severity": "warning",
+      "message": "meta.locale \"pt-BR\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+      "subject": {
+        "diagramType": "waterfall",
+        "path": "/meta/locale"
+      },
+      "evidence": {
+        "locale": "pt-BR",
+        "bundledLocales": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "es",
+          "ko",
+          "ar"
+        ]
+      },
+      "supportedFixes": [
+        "Supply meta.translations for this locale.",
+        "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\waterfall\\deckstudio-waterfall.finalize.json",
+    "summaryReceipt": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\waterfall\\deckstudio-waterfall.finalize-summary.json",
+    "browserCheckReceipt": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\waterfall\\deckstudio-waterfall.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-11-19T15:12:23.693Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 2835,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

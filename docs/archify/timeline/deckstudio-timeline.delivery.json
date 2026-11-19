@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "c4aa633c-c21d-435f-a707-1ce92d7f0d72",
+  "status": "current",
+  "command": "deliver",
+  "type": "timeline",
+  "input": "c:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\timeline\\candidate.json",
+  "output": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\timeline\\deckstudio-timeline.html",
+  "specification": {
+    "sha256": "3a3ca71ad9b1922ec5e921fc3e9c1d0b880fbcec20f27337b82b74c5e0109124",
+    "bytes": 3916
+  },
+  "artifact": {
+    "sha256": "cb35c2a04abce7b8cb904a2d44eead9b442a237692143f2f98fcad5d1305e707",
+    "bytes": 823155
+  }
+}

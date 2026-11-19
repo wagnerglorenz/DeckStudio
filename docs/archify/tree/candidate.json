@@ -1,0 +1,136 @@
+{
+  "schema_version": 1,
+  "diagram_type": "tree",
+  "meta": {
+    "title": "DeckStudio — Estrutura de Módulos e Contenção do Repositório",
+    "subtitle": "Cada nó pertence a um único diretório pai; conexões indicam contenção no repositório.",
+    "locale": "pt-BR",
+    "output": "docs/archify/tree/deckstudio-tree.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/wagnerglorenz/DeckStudio.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "ba55fa104da70fb050df0ce3a69913017efdf260"
+    }
+  },
+  "layout": {
+    "direction": "right"
+  },
+  "nodes": [
+    {
+      "id": "repo",
+      "label": "StreamDeck (MIT)",
+      "sublabel": "Raiz do repositório privado",
+      "sources": [
+        { "path": "README.md", "line": 1, "end_line": 20, "label": "Visão geral" }
+      ]
+    },
+    {
+      "id": "deckstudio",
+      "label": "deckstudio/",
+      "parent": "repo",
+      "sublabel": "Aplicação Rust + Tauri v2",
+      "sources": [
+        { "path": "deckstudio/Cargo.toml", "line": 1, "end_line": 10, "label": "Workspace Rust" }
+      ]
+    },
+    {
+      "id": "crate_core",
+      "label": "crates/deck-core",
+      "parent": "deckstudio",
+      "sublabel": "Config + DTOs IPC + importador",
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/lib.rs", "line": 1, "end_line": 5, "label": "Exports deck-core" }
+      ]
+    },
+    {
+      "id": "crate_engine",
+      "label": "crates/deck-engine",
+      "parent": "deckstudio",
+      "sublabel": "Daemon 24/7 HID + OBS + IPC",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/main.rs", "line": 1, "end_line": 40, "label": "Módulos do engine" }
+      ]
+    },
+    {
+      "id": "sensors_dir",
+      "label": "sensors/ (4 fontes)",
+      "parent": "crate_engine",
+      "sublabel": "AIDA64, LibreHWM, HWiNFO, Win32+NVML",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/sensors/mod.rs", "line": 1, "end_line": 16, "label": "SensorHub" }
+      ]
+    },
+    {
+      "id": "app_studio",
+      "label": "apps/studio (Tauri v2)",
+      "parent": "deckstudio",
+      "sublabel": "Editor 0 MB idle em React/TS",
+      "sources": [
+        { "path": "deckstudio/apps/studio/src-tauri/src/main.rs", "line": 1, "end_line": 13, "label": "Shell Tauri" }
+      ]
+    },
+    {
+      "id": "design_sys",
+      "label": "src/design-system/",
+      "parent": "app_studio",
+      "sublabel": "tokens.css + components.tsx",
+      "sources": [
+        { "path": "deckstudio/apps/studio/src/design-system/index.ts", "line": 1, "end_line": 12, "label": "Exports Design System" }
+      ]
+    },
+    {
+      "id": "assets_dir",
+      "label": "assets/",
+      "parent": "deckstudio",
+      "sublabel": "logo.svg + icon.ico"
+    },
+    {
+      "id": "docs_dir",
+      "label": "docs/",
+      "parent": "repo",
+      "sublabel": "Compatibilidade, DS, Evolução, Archify",
+      "sources": [
+        { "path": "docs/COMPATIBILITY.md", "line": 1, "end_line": 20, "label": "Compatibilidade" }
+      ]
+    },
+    {
+      "id": "scripts_rel",
+      "label": "scripts/ & releases/",
+      "parent": "repo",
+      "sublabel": "release.ps1 + v0.1.0 + v0.2.0",
+      "sources": [
+        { "path": "scripts/release.ps1", "line": 1, "end_line": 28, "label": "Automação de release" }
+      ]
+    },
+    {
+      "id": "rules_dir",
+      "label": ".agent/rules/",
+      "parent": "repo",
+      "sublabel": "Regras DS + Archify + Release",
+      "sources": [
+        { "path": ".agent/rules/release-and-archify-impact.md", "line": 1, "end_line": 30, "label": "Regras workspace" }
+      ]
+    },
+    {
+      "id": "legacy_py",
+      "label": "ajazz_monitor/ + rollback/",
+      "parent": "repo",
+      "sublabel": "Protótipo Python & backup .reg",
+      "sources": [
+        { "path": "rollback/restore_stream_dock_ajazz.reg", "line": 1, "end_line": 3, "label": "Rollback oficial" }
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Separação Arquitetural",
+      "items": [
+        "Binários compilados (.exe) e target/ são ignorados do Git e distribuídos nos ZIPs de releases/",
+        "deck-core compartilha tipos puros entre engine e futuro tooling sem dependências de SO"
+      ]
+    }
+  ]
+}

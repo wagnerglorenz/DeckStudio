@@ -1,0 +1,164 @@
+{
+  "schema_version": 1,
+  "diagram_type": "sequence",
+  "meta": {
+    "title": "DeckStudio — Sequência de Clique Físico, OBS v5 e Atualização HID",
+    "locale": "pt-BR",
+    "output": "docs/archify/sequence/deckstudio-sequence.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/wagnerglorenz/DeckStudio.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "ba55fa104da70fb050df0ce3a69913017efdf260"
+    }
+  },
+  "participants": [
+    {
+      "id": "akp",
+      "type": "external",
+      "label": "AKP153E",
+      "sublabel": "HID 0300:1010",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/hid_proto.rs", "line": 101, "end_line": 127, "label": "parse_input_report v1/v2" }
+      ]
+    },
+    {
+      "id": "reader",
+      "type": "messagebus",
+      "label": "akp-reader",
+      "sublabel": "Thread OS",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/device.rs", "line": 260, "end_line": 284, "label": "reader_loop + catch_unwind" }
+      ]
+    },
+    {
+      "id": "shared",
+      "type": "backend",
+      "label": "EngineShared",
+      "sublabel": "Tokio rt_handle",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/state.rs", "line": 76, "end_line": 106, "label": "dispatch_button_press" },
+        { "path": "deckstudio/crates/deck-engine/src/actions.rs", "line": 25, "end_line": 65, "label": "execute_action(rt)" }
+      ]
+    },
+    {
+      "id": "obs",
+      "type": "cloud",
+      "label": "ObsClient v5",
+      "sublabel": "WS 127.0.0.1:4455",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/obs.rs", "line": 179, "end_line": 215, "label": "ObsCmd + Eventos op=5" }
+      ]
+    },
+    {
+      "id": "render",
+      "type": "backend",
+      "label": "Render + Writer",
+      "sublabel": "tiny-skia + blake3",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/main.rs", "line": 220, "end_line": 310, "label": "render_all_tiles cache" },
+        { "path": "deckstudio/crates/deck-engine/src/device.rs", "line": 178, "end_line": 253, "label": "writer_loop 512B" }
+      ]
+    },
+    {
+      "id": "studio",
+      "type": "frontend",
+      "label": "deck-studio",
+      "sublabel": "Editor sob demanda",
+      "sources": [
+        { "path": "deckstudio/apps/studio/src/api.ts", "line": 31, "end_line": 46, "label": "Cliente IPC :19876" }
+      ]
+    }
+  ],
+  "segments": [
+    { "from": 160, "to": 310, "label": "Clique físico HID -> Tokio Handle" },
+    { "from": 325, "to": 465, "label": "OBS WebSocket v5 & Troca de Página" },
+    { "from": 475, "to": 635, "label": "Render Diff -> HID 512B + Preview" }
+  ],
+  "messages": [
+    {
+      "id": "m1",
+      "from": "akp",
+      "to": "reader",
+      "y": 175,
+      "label": "HID ACK..OK pos 0x00",
+      "variant": "emphasis",
+      "note": "Timeout >= 60ms evita busy-loop na placa USB"
+    },
+    {
+      "id": "m2",
+      "from": "reader",
+      "to": "shared",
+      "y": 240,
+      "label": "dispatch_button_press(pos)",
+      "variant": "security",
+      "note": "Protegido por catch_unwind; agenda via rt_handle.spawn sem panic"
+    },
+    {
+      "id": "m3",
+      "from": "shared",
+      "to": "obs",
+      "y": 335,
+      "label": "ObsCmd::ToggleRecord / Scene",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m4",
+      "from": "obs",
+      "to": "shared",
+      "y": 395,
+      "label": "Evento op=5 RecordStateChanged",
+      "variant": "return",
+      "note": "Se OBS estiver offline, registra [OBS] Ignorado nos logs"
+    },
+    {
+      "id": "m5",
+      "from": "shared",
+      "to": "render",
+      "y": 495,
+      "label": "clear_render_cache + notify_redraw",
+      "variant": "emphasis"
+    },
+    {
+      "id": "m6",
+      "from": "render",
+      "to": "akp",
+      "y": 545,
+      "label": "IMG_ANNOUNCE + chunks 512B + FLUSH",
+      "variant": "default"
+    },
+    {
+      "id": "m7",
+      "from": "render",
+      "to": "studio",
+      "y": 600,
+      "label": "GET /api/preview/grid (18 PNGs)",
+      "variant": "dashed"
+    }
+  ],
+  "activations": [
+    { "participant": "reader", "from": 170, "to": 265, "type": "messagebus" },
+    { "participant": "shared", "from": 235, "to": 510, "type": "backend" },
+    { "participant": "obs", "from": 330, "to": 410, "type": "cloud" },
+    { "participant": "render", "from": 490, "to": 610, "type": "backend" }
+  ],
+  "cards": [
+    {
+      "dot": "rose",
+      "title": "Regra Crítica Anti-Regressão",
+      "items": [
+        "akp-reader corre fora do runtime Tokio: nunca usar tokio::spawn nu no callback",
+        "Sempre usar &st.rt_handle para manter a thread leitora viva após cliques"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Envio HID Seguro",
+      "items": [
+        "blake3 evita reenviar JPEG idêntico ao USB do AKP153E",
+        "Pacotes output fixos em 512B (+1 byte report ID 0x00)"
+      ]
+    }
+  ]
+}

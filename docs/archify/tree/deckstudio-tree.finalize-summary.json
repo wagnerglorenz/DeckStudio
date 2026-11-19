@@ -1,0 +1,76 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "command": "finalize",
+  "status": "pass",
+  "type": "tree",
+  "quality": "showcase",
+  "specification": {
+    "path": "c:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\tree\\candidate.json",
+    "sha256": "073c4053cd588c6bc5fcdcc4e01da53244ce17efd1da35d65d924c77bac0e3a8",
+    "bytes": 4303
+  },
+  "artifact": {
+    "path": "c:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\tree\\deckstudio-tree.html",
+    "sha256": "8e4ad683a7a97fb73a1273b49d58588fe4185af4d8f3a8052e699d3ce62c6713",
+    "bytes": 827120
+  },
+  "gates": {
+    "validate": "pass",
+    "deliver": "pass",
+    "check": "pass",
+    "browser-check": "pass"
+  },
+  "diagnostics": [
+    {
+      "code": "i18n/locale-fallback",
+      "severity": "warning",
+      "message": "meta.locale \"pt-BR\" has no bundled catalog and no usable meta.translations; the Viewer chrome and <html lang> fall back to English.",
+      "subject": {
+        "diagramType": "tree",
+        "path": "/meta/locale"
+      },
+      "evidence": {
+        "locale": "pt-BR",
+        "bundledLocales": [
+          "en",
+          "zh-CN",
+          "zh-TW",
+          "es",
+          "ko",
+          "ar"
+        ]
+      },
+      "supportedFixes": [
+        "Supply meta.translations for this locale.",
+        "Use a bundled locale: en, zh-CN, zh-TW, es, ko, ar."
+      ]
+    }
+  ],
+  "diagnosticSummary": {
+    "total": 1,
+    "shown": 1,
+    "truncated": false
+  },
+  "evidence": {
+    "receipt": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\tree\\deckstudio-tree.finalize.json",
+    "summaryReceipt": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\tree\\deckstudio-tree.finalize-summary.json",
+    "browserCheckReceipt": "c:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\tree\\deckstudio-tree.browser-check.json"
+  },
+  "update": {
+    "status": "current",
+    "installedVersion": "3.2.0",
+    "availableVersion": "3.2.0",
+    "releaseNotes": null,
+    "checkedAt": "2026-11-19T15:12:23.693Z",
+    "source": "cache",
+    "noticeRequired": false,
+    "noticeText": null
+  },
+  "visualReview": "not-requested",
+  "durationMs": 3110,
+  "browserCheck": {
+    "requested": true,
+    "ran": true
+  }
+}

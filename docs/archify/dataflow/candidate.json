@@ -1,0 +1,185 @@
+{
+  "schema_version": 1,
+  "diagram_type": "dataflow",
+  "meta": {
+    "title": "DeckStudio — Pipeline de Telemetria, Cache e Renderização HID",
+    "locale": "pt-BR",
+    "output": "docs/archify/dataflow/deckstudio-dataflow.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/wagnerglorenz/DeckStudio.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "ba55fa104da70fb050df0ce3a69913017efdf260"
+    }
+  },
+  "stages": [
+    { "label": "Fontes" },
+    { "label": "Coleta + Fallback" },
+    { "label": "Aliases + Cache" },
+    { "label": "Renderização" },
+    { "label": "Saída USB / IPC" }
+  ],
+  "nodes": [
+    {
+      "id": "aida_shm",
+      "type": "database",
+      "label": "AIDA64 SHM",
+      "sublabel": "AIDA64_SensorValues",
+      "stage": 0,
+      "row": 0,
+      "tag": "79 sensores",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/sensors/aida64.rs", "line": 42, "end_line": 56, "label": "Aida64Reader::read" }
+      ]
+    },
+    {
+      "id": "libre_hw",
+      "type": "cloud",
+      "label": "LibreHWM HTTP",
+      "sublabel": ":8085/data.json",
+      "stage": 0,
+      "row": 1,
+      "tag": "backoff 30s",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/sensors/librehwm.rs", "line": 14, "end_line": 28, "label": "fetch_librehwm 300ms" }
+      ]
+    },
+    {
+      "id": "hwinfo_shm",
+      "type": "database",
+      "label": "HWiNFO64 SHM",
+      "sublabel": "HWiNFO_SENS_SM2",
+      "stage": 0,
+      "row": 2,
+      "tag": "estruturas C",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/sensors/hwinfo.rs", "line": 37, "end_line": 76, "label": "read_hwinfo_shm" }
+      ]
+    },
+    {
+      "id": "win_nvml",
+      "type": "backend",
+      "label": "Win32 + NVML",
+      "sublabel": "GetIfTable + nvml.dll",
+      "stage": 0,
+      "row": 3,
+      "tag": "standby GPU",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/sensors/native_win.rs", "line": 177, "end_line": 215, "label": "NativeMonitor::sample" }
+      ]
+    },
+    {
+      "id": "sensor_hub",
+      "type": "messagebus",
+      "label": "SensorHub",
+      "sublabel": "Prioridade + NIC",
+      "stage": 1,
+      "row": 1,
+      "tag": "1 Hz / 0ms lock",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/sensors/mod.rs", "line": 46, "end_line": 200, "label": "refresh e should_poll" }
+      ]
+    },
+    {
+      "id": "aliases_hist",
+      "type": "backend",
+      "label": "Aliases + 30 pts",
+      "sublabel": "GPU_TEMP, CPU_UTIL...",
+      "stage": 2,
+      "row": 1,
+      "tag": "assinatura u64",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/sensors/mod.rs", "line": 202, "end_line": 260, "label": "aliases e histórico" }
+      ]
+    },
+    {
+      "id": "sig_cache",
+      "type": "security",
+      "label": "Cache Delta Tile",
+      "sublabel": "Pula tiles iguais",
+      "stage": 2,
+      "row": 2,
+      "tag": "pula CPU",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/main.rs", "line": 166, "end_line": 300, "label": "tile_base_hash e skip" }
+      ]
+    },
+    {
+      "id": "skia_render",
+      "type": "backend",
+      "label": "tiny-skia 3x",
+      "sublabel": "288->96 Lanczos3",
+      "stage": 3,
+      "row": 1,
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/render.rs", "line": 1, "end_line": 45, "label": "CANVAS 288 -> 96" }
+      ]
+    },
+    {
+      "id": "jpeg_san",
+      "type": "security",
+      "label": "sanitize_jpeg",
+      "sublabel": "RGB -90° <=10KB",
+      "stage": 3,
+      "row": 2,
+      "tag": "sem EXIF/ICC",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/hid_proto.rs", "line": 75, "end_line": 99, "label": "sanitize_jpeg" }
+      ]
+    },
+    {
+      "id": "hid_out",
+      "type": "external",
+      "label": "AKP153E USB HID",
+      "sublabel": "blake3 + 512B",
+      "stage": 4,
+      "row": 2,
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/device.rs", "line": 162, "end_line": 176, "label": "blake3 dedup" }
+      ]
+    },
+    {
+      "id": "ipc_grid",
+      "type": "frontend",
+      "label": "Preview Editor",
+      "sublabel": "PNG base64 :19876",
+      "stage": 4,
+      "row": 1,
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/ipc.rs", "line": 98, "end_line": 120, "label": "get_preview_grid" }
+      ]
+    }
+  ],
+  "flows": [
+    { "id": "f1", "from": "aida_shm", "to": "sensor_hub", "label": "XML SHM 79", "variant": "emphasis" },
+    { "id": "f2", "from": "libre_hw", "to": "sensor_hub", "label": "JSON HTTP", "variant": "dashed" },
+    { "id": "f3", "from": "hwinfo_shm", "to": "sensor_hub", "label": "HWiNFO SM2" },
+    { "id": "f4", "from": "win_nvml", "to": "sensor_hub", "label": "CPU RAM Net" },
+    { "id": "f5", "from": "sensor_hub", "to": "aliases_hist", "label": "mapa normal", "variant": "emphasis" },
+    { "id": "f6", "from": "aliases_hist", "to": "sig_cache", "label": "hash por tile" },
+    { "id": "f7", "from": "aliases_hist", "to": "skia_render", "label": "delta alterado", "variant": "emphasis" },
+    { "id": "f8", "from": "sig_cache", "to": "skia_render", "label": "libera render", "variant": "security" },
+    { "id": "f9", "from": "skia_render", "to": "jpeg_san", "label": "RgbImage 96", "variant": "emphasis" },
+    { "id": "f10", "from": "skia_render", "to": "ipc_grid", "label": "18 PNGs B64" },
+    { "id": "f11", "from": "jpeg_san", "to": "hid_out", "label": "JPEG 512B", "variant": "security" }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Economia de CPU & USB",
+      "items": [
+        "Cache de assinatura em render_all_tiles evita gerar Lanczos3 de teclas paradas",
+        "blake3 em DeviceManager evita reescrever pacotes HID idênticos"
+      ]
+    },
+    {
+      "dot": "cyan",
+      "title": "Isolamento de Telemetria",
+      "items": [
+        "LibreHWM offline entra em backoff de 30s com timeout curto de 300ms",
+        "NVML não é carregado nem consultado enquanto AIDA64 entrega GPU"
+      ]
+    }
+  ]
+}

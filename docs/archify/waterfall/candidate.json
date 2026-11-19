@@ -1,0 +1,96 @@
+{
+  "schema_version": 1,
+  "diagram_type": "waterfall",
+  "meta": {
+    "title": "DeckStudio — Orçamento Temporal de Ciclo 1 Hz e Clique HID",
+    "subtitle": "Tempos ilustrativos de referência em estado estacionário (com AIDA64 ativo, cache delta ativo e OBS offline).",
+    "locale": "pt-BR",
+    "output": "docs/archify/waterfall/deckstudio-waterfall.html",
+    "evidence": "illustrative",
+    "unit": "ms",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/wagnerglorenz/DeckStudio.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "ba55fa104da70fb050df0ce3a69913017efdf260"
+    }
+  },
+  "spans": [
+    {
+      "id": "tick",
+      "name": "Ciclo Completo 1 Hz + Clique",
+      "service": "deck-engine",
+      "start": 0,
+      "end": 35,
+      "detail": "Orçamento ilustrativo total dentro da janela de 1000 ms sem bloqueio da placa de rede",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/main.rs", "line": 527, "end_line": 542, "label": "Loop sensores e render" }
+      ]
+    },
+    {
+      "id": "aida_read",
+      "name": "AIDA64 SHM (79 sensores)",
+      "service": "sensors/aida64",
+      "start": 0,
+      "duration": 2.5,
+      "parent": "tick",
+      "detail": "Leitura em memória compartilhada AIDA64_SensorValues + hash FNV"
+    },
+    {
+      "id": "libre_skip",
+      "name": "LibreHWM (backoff 30s skip)",
+      "service": "sensors/librehwm",
+      "start": 2.5,
+      "duration": 0.2,
+      "parent": "tick",
+      "detail": "Pula chamada HTTP quando offline evitando SYN/RST a cada segundo"
+    },
+    {
+      "id": "win32_net",
+      "name": "Win32 CPU + RAM + GetIfTable",
+      "service": "sensors/native_win",
+      "start": 2.7,
+      "duration": 1.3,
+      "parent": "tick",
+      "detail": "NVML permanece em standby enquanto AIDA64 fornece dados da GPU"
+    },
+    {
+      "id": "render_diff",
+      "name": "tiny-skia + Cache Delta (3–6 teclas)",
+      "service": "render",
+      "start": 4.0,
+      "duration": 9.0,
+      "parent": "tick",
+      "detail": "Teclas estáticas (relógio, nav, OBS logo) reaproveitam cache"
+    },
+    {
+      "id": "jpeg_hid",
+      "name": "sanitize_jpeg + blake3 + HID 512B",
+      "service": "device",
+      "start": 13.0,
+      "duration": 10.0,
+      "parent": "tick",
+      "detail": "Envio cadenciado <= 15 tiles/s pela fila do akp-writer"
+    },
+    {
+      "id": "hid_click",
+      "name": "Leitura Clique + rt.spawn -> Nav/OBS",
+      "service": "akp-reader",
+      "start": 23.0,
+      "duration": 12.0,
+      "parent": "tick",
+      "detail": "Thread OS dispara no rt_handle sem bloquear akp-writer nem rede"
+    }
+  ],
+  "cards": [
+    {
+      "dot": "amber",
+      "title": "Caráter Ilustrativo dos Tempos",
+      "items": [
+        "Os intervalos em milissegundos representam orçamento ilustrativo de execução (meta.evidence: illustrative)",
+        "A soma dos passos (~35 ms) deixa ~965 ms em repouso por segundo de ciclo"
+      ]
+    }
+  ]
+}

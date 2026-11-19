@@ -1,0 +1,200 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "DeckStudio — Arquitetura do Sistema (Opção 2)",
+    "locale": "pt-BR",
+    "output": "docs/archify/architecture/deckstudio-architecture.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/wagnerglorenz/DeckStudio.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "ba55fa104da70fb050df0ce3a69913017efdf260"
+    }
+  },
+  "components": [
+    {
+      "id": "user",
+      "type": "external",
+      "label": "Operador / Streamer",
+      "sublabel": "Teclas 6x3 e Editor",
+      "pos": [40, 260],
+      "size": [148, 64]
+    },
+    {
+      "id": "studio_ui",
+      "type": "frontend",
+      "label": "deck-studio.exe",
+      "sublabel": "Tauri v2 + Design System",
+      "tag": "0 MB ao fechar",
+      "pos": [40, 80],
+      "size": [156, 66],
+      "sources": [
+        { "path": "deckstudio/apps/studio/src/App.tsx", "line": 1, "end_line": 32, "label": "App React + DS" },
+        { "path": "deckstudio/apps/studio/src-tauri/src/main.rs", "line": 1, "end_line": 13, "label": "Tauri exit(0)" }
+      ]
+    },
+    {
+      "id": "hw_deck",
+      "type": "external",
+      "label": "Stream Dock HID",
+      "sublabel": "AKP153E 0300:1010",
+      "tag": "512B JPEG",
+      "pos": [40, 440],
+      "size": [156, 66]
+    },
+    {
+      "id": "device_mgr",
+      "type": "backend",
+      "label": "DeviceManager",
+      "sublabel": "akp-writer + akp-reader",
+      "tag": "catch_unwind",
+      "pos": [300, 440],
+      "size": [168, 66],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/device.rs", "line": 57, "end_line": 122, "label": "DeviceManager::start" },
+        { "path": "deckstudio/crates/deck-engine/src/hid_proto.rs", "line": 75, "end_line": 165, "label": "HID 512B e sanitize" }
+      ]
+    },
+    {
+      "id": "ipc_api",
+      "type": "security",
+      "label": "API IPC Axum",
+      "sublabel": "127.0.0.1:19876",
+      "tag": "Loopback REST",
+      "pos": [300, 80],
+      "size": [168, 66],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/ipc.rs", "line": 24, "end_line": 50, "label": "Rotas IPC locais" },
+        { "path": "deckstudio/crates/deck-core/src/ipc.rs", "line": 5, "end_line": 64, "label": "Contratos DTO" }
+      ]
+    },
+    {
+      "id": "engine_core",
+      "type": "backend",
+      "label": "EngineShared + Actions",
+      "sublabel": "Tokio rt + Bandeja",
+      "tag": "19 MB WS",
+      "pos": [300, 240],
+      "size": [174, 84],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/state.rs", "line": 34, "end_line": 106, "label": "EngineShared e dispatch" },
+        { "path": "deckstudio/crates/deck-engine/src/actions.rs", "line": 25, "end_line": 65, "label": "execute_action(rt)" },
+        { "path": "deckstudio/crates/deck-engine/src/main.rs", "line": 398, "end_line": 489, "label": "Boot e loops" }
+      ]
+    },
+    {
+      "id": "render_pipe",
+      "type": "backend",
+      "label": "Renderer tiny-skia",
+      "sublabel": "288->96 Lanczos3 + Cache",
+      "pos": [590, 420],
+      "size": [172, 66],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/main.rs", "line": 187, "end_line": 310, "label": "render_all_tiles cache" },
+        { "path": "deckstudio/crates/deck-engine/src/render.rs", "line": 1, "end_line": 40, "label": "Superamostragem 3x" }
+      ]
+    },
+    {
+      "id": "sensor_hub",
+      "type": "messagebus",
+      "label": "SensorHub (4 Fontes)",
+      "sublabel": "Fallback + Backoff 30s",
+      "pos": [590, 190],
+      "size": [172, 66],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/sensors/mod.rs", "line": 17, "end_line": 115, "label": "SensorHub::refresh" },
+        { "path": "deckstudio/crates/deck-engine/src/sensors/native_win.rs", "line": 170, "end_line": 215, "label": "Win32 + lazy NVML" }
+      ]
+    },
+    {
+      "id": "obs_weather",
+      "type": "cloud",
+      "label": "OBS v5 + Open-Meteo",
+      "sublabel": "WS :4455 + HTTPS Clima",
+      "pos": [590, 70],
+      "size": [172, 66],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/obs.rs", "line": 43, "end_line": 85, "label": "ObsClient reconnect" },
+        { "path": "deckstudio/crates/deck-engine/src/weather.rs", "line": 37, "end_line": 71, "label": "spawn_weather_loop" }
+      ]
+    },
+    {
+      "id": "config_store",
+      "type": "database",
+      "label": "config.json",
+      "sublabel": "%APPDATA%\\DeckStudio",
+      "pos": [870, 310],
+      "size": [178, 62],
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/config.rs", "line": 587, "end_line": 603, "label": "load/save config" }
+      ]
+    },
+    {
+      "id": "telemetry_ext",
+      "type": "external",
+      "label": "AIDA64 / LHM / HWiNFO",
+      "sublabel": "SHM + HTTP :8085 + Win32",
+      "pos": [870, 190],
+      "size": [178, 66],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/sensors/aida64.rs", "line": 42, "end_line": 85, "label": "AIDA64 SHM + vigia" },
+        { "path": "deckstudio/crates/deck-engine/src/sensors/librehwm.rs", "line": 14, "end_line": 28, "label": "LibreHWM 300ms HTTP" },
+        { "path": "deckstudio/crates/deck-engine/src/sensors/hwinfo.rs", "line": 37, "end_line": 75, "label": "HWiNFO_SENS_SM2" }
+      ]
+    },
+    {
+      "id": "obs_daemon",
+      "type": "external",
+      "label": "OBS Studio + WinEvent",
+      "sublabel": "Cenas/Rec + SetWinEventHook",
+      "pos": [870, 70],
+      "size": [178, 66],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/smart_profile.rs", "line": 21, "end_line": 45, "label": "ForegroundHook 0%" }
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "deck-engine.exe (Rust 24/7 — Bandeja Windows)",
+      "wraps": ["ipc_api", "engine_core", "device_mgr", "sensor_hub", "render_pipe", "obs_weather"],
+      "pad": 22
+    }
+  ],
+  "connections": [
+    { "id": "user-studio", "from": "user", "to": "studio_ui", "label": "edita", "fromSide": "top", "toSide": "bottom" },
+    { "id": "user-deck", "from": "user", "to": "hw_deck", "label": "clica", "fromSide": "bottom", "toSide": "top", "variant": "emphasis" },
+    { "id": "studio-ipc", "from": "studio_ui", "to": "ipc_api", "label": "REST JSON" },
+    { "id": "ipc-core", "from": "ipc_api", "to": "engine_core", "label": "config + sim", "fromSide": "bottom", "toSide": "top" },
+    { "id": "hw-mgr", "from": "hw_deck", "to": "device_mgr", "label": "HID 512B", "variant": "emphasis" },
+    { "id": "mgr-core", "from": "device_mgr", "to": "engine_core", "label": "rt_handle", "fromSide": "top", "toSide": "bottom", "variant": "emphasis" },
+    { "id": "core-render", "from": "engine_core", "to": "render_pipe", "label": "tiles diff", "variant": "emphasis" },
+    { "id": "render-mgr", "from": "render_pipe", "to": "device_mgr", "label": "JPEG 96px", "fromSide": "left", "toSide": "right", "variant": "dashed" },
+    { "id": "core-sensors", "from": "engine_core", "to": "sensor_hub", "label": "1 Hz" },
+    { "id": "core-obs", "from": "engine_core", "to": "obs_weather", "label": "ObsCmd" },
+    { "id": "core-config", "from": "engine_core", "to": "config_store", "label": "persiste", "variant": "dashed" },
+    { "id": "sensors-ext", "from": "sensor_hub", "to": "telemetry_ext", "label": "SHM / HTTP" },
+    { "id": "obs-ext", "from": "obs_weather", "to": "obs_daemon", "label": "WebSocket v5" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Análise de Impacto (Runtime)",
+      "items": [
+        "deck-studio.exe encerra 100% do WebView2 ao fechar; alterações na UI não aumentam RAM em idle",
+        "device_mgr + akp-reader usam EngineShared.rt_handle com catch_unwind"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Isolamento de Rede & DPC",
+      "items": [
+        "LibreHWM offline entra em backoff de 30s; NVML fica em standby com AIDA64 ativo",
+        "Cache de assinatura em render_all_tiles evita Lanczos3 e HID desnecessários (0% perda UDP)"
+      ]
+    }
+  ]
+}

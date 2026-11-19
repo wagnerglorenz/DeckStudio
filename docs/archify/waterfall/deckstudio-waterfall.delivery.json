@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "24c782bd-0f4a-45be-a989-292405829c87",
+  "status": "current",
+  "command": "deliver",
+  "type": "waterfall",
+  "input": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\waterfall\\candidate.json",
+  "output": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\waterfall\\deckstudio-waterfall.html",
+  "specification": {
+    "sha256": "617db8f22d57da70e45f8c2175148976141b0287e8c4d999140e583898a495d3",
+    "bytes": 3032
+  },
+  "artifact": {
+    "sha256": "3768eb2f84ed58a6464cd8e1a36098c0016933b895244a5fb85eafb473ac59fa",
+    "bytes": 818142
+  }
+}

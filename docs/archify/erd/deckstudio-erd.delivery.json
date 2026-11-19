@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "4c3bf0ad-58da-4340-a90d-9071539bbcdc",
+  "status": "current",
+  "command": "deliver",
+  "type": "erd",
+  "input": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\erd\\candidate.json",
+  "output": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\erd\\deckstudio-erd.html",
+  "specification": {
+    "sha256": "ec93894729f751a40ea33e802b38a81e177ae23f36d25aa4578cae296630ce34",
+    "bytes": 9835
+  },
+  "artifact": {
+    "sha256": "217f9c6aa187145dc21806b8fd7ac6aa80da4232e966eff1a486816e04117f96",
+    "bytes": 865807
+  }
+}

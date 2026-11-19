@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "1155393f-a657-4d6d-af64-464859578bea",
+  "status": "current",
+  "command": "deliver",
+  "type": "lifecycle",
+  "input": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\lifecycle\\candidate.json",
+  "output": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\lifecycle\\deckstudio-lifecycle.html",
+  "specification": {
+    "sha256": "b766453d2b056fa12663f07a6f225bbb97cac6422c46a7d939bdcbfcb5e810ad",
+    "bytes": 4778
+  },
+  "artifact": {
+    "sha256": "146f0f20da2d50bec11d5bc9c943ab58078c51d08417b0facd33cb8e6d4d11a7",
+    "bytes": 829159
+  }
+}

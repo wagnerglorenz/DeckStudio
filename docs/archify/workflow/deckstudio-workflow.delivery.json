@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "121edc89-5f18-444f-ad17-96cac2c6a67a",
+  "status": "current",
+  "command": "deliver",
+  "type": "workflow",
+  "input": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\workflow\\candidate.json",
+  "output": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\workflow\\deckstudio-workflow.html",
+  "specification": {
+    "sha256": "2960f5568da81deaaf0f488ecc6b6452d3fda92944fb28fd5cfe7ed3d2d255e8",
+    "bytes": 6329
+  },
+  "artifact": {
+    "sha256": "3f311fc14e75e35db29f9da61a95ddbcc39de7afe69946b5786a702e46318c3d",
+    "bytes": 830667
+  }
+}

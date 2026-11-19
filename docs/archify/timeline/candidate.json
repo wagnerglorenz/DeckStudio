@@ -1,0 +1,113 @@
+{
+  "schema_version": 1,
+  "diagram_type": "timeline",
+  "meta": {
+    "title": "DeckStudio — Linha do Tempo de Evolução (Fase 0 até v0.2.0)",
+    "subtitle": "Marcos registrados entre 18 e 19 de novembro de 2026 com medições reais.",
+    "locale": "pt-BR",
+    "output": "docs/archify/timeline/deckstudio-timeline.html",
+    "evidence": "observed",
+    "timezone": "America/Sao_Paulo",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/wagnerglorenz/DeckStudio.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "ba55fa104da70fb050df0ce3a69913017efdf260"
+    }
+  },
+  "lanes": [
+    { "id": "diag", "label": "Diagnóstico" },
+    { "id": "eng", "label": "Engine & Otimização" },
+    { "id": "rel", "label": "Releases & Produto" }
+  ],
+  "events": [
+    {
+      "id": "ev_phase0",
+      "at": "2026-11-18T12:00:00-03:00",
+      "title": "Fase 0: gargalo AJAZZ oficial",
+      "detail": "QtWebEngine consumia 252,3 MB com +13k irq/s e 4–9% de perda UDP em 300 Mbps.",
+      "lane": "diag",
+      "kind": "alert",
+      "sources": [
+        { "path": "docs/EVOLUTION.md", "line": 7, "end_line": 10, "label": "Registro Fase 0" }
+      ]
+    },
+    {
+      "id": "ev_py",
+      "at": "2026-11-18T18:00:00-03:00",
+      "title": "Protótipo Python 0% UDP",
+      "detail": "Descoberto protocolo 512B do AKP153E e calibragem 6x3; 0% de perda em 3/3 rodadas.",
+      "lane": "eng",
+      "kind": "recovery",
+      "sources": [
+        { "path": "CHANGELOG.md", "line": 21, "end_line": 23, "label": "Changelog protótipo" }
+      ]
+    },
+    {
+      "id": "ev_rust",
+      "at": "2026-11-19T11:15:00-03:00",
+      "title": "Opção 2: Rust + Tauri v2",
+      "detail": "Motor nativo 24/7 + editor 5 telas com 0 MB de WebView2 ao fechar a janela.",
+      "lane": "eng",
+      "kind": "change",
+      "sources": [
+        { "path": "CHANGELOG.md", "line": 25, "end_line": 32, "label": "Arquitetura Opção 2" }
+      ]
+    },
+    {
+      "id": "ev_opt",
+      "at": "2026-11-19T11:32:00-03:00",
+      "title": "Otimização 19 MB & 0% UDP",
+      "detail": "Backoff 30s LibreHWM, NVML standby e render cache cortaram RAM pela metade e zeraram perda UDP.",
+      "lane": "eng",
+      "kind": "recovery",
+      "sources": [
+        { "path": "CHANGELOG.md", "line": 33, "end_line": 33, "label": "Otimização RAM e NIC" }
+      ]
+    },
+    {
+      "id": "ev_btn",
+      "at": "2026-11-19T11:46:00-03:00",
+      "title": "Fix akp-reader + Sim 16/16",
+      "detail": "Corrigido panic na thread OS via rt_handle + catch_unwind; 16 testes com Mock OBS v5.",
+      "lane": "eng",
+      "kind": "action",
+      "sources": [
+        { "path": "CHANGELOG.md", "line": 34, "end_line": 36, "label": "Correção botões físicos" }
+      ]
+    },
+    {
+      "id": "ev_v010",
+      "at": "2026-11-19T11:57:00-03:00",
+      "title": "Release v0.1.0 Privado MIT",
+      "detail": "Criado repositório privado no GitHub sob licença MIT e publicada Release v0.1.0.",
+      "lane": "rel",
+      "kind": "default",
+      "sources": [
+        { "path": "releases/v0.1.0/RELEASE_NOTES.md", "line": 1, "end_line": 12, "label": "Notas v0.1.0" }
+      ]
+    },
+    {
+      "id": "ev_v020",
+      "at": "2026-11-19T12:10:00-03:00",
+      "title": "Release v0.2.0 DS + Sobre",
+      "detail": "Adicionados Design System, logo próprio, aba Sobre, matriz de compatibilidade e Archify x10.",
+      "lane": "rel",
+      "kind": "change",
+      "sources": [
+        { "path": "CHANGELOG.md", "line": 5, "end_line": 17, "label": "Changelog v0.2.0" }
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "emerald",
+      "title": "Ganhos Medidos",
+      "items": [
+        "RAM residente caiu de ~252,3 MB (oficial) para ~18,5–20,3 MB WorkingSet (5,3–7,2 MB Priv.)",
+        "Perda UDP 300 Mbps caiu de 4–9% para 0% com delta=0 descartes Realtek"
+      ]
+    }
+  ]
+}

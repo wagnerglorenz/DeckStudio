@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "fbe6418f-a4e7-4ccb-9895-fb388cf3fd7d",
+  "status": "current",
+  "command": "deliver",
+  "type": "tree",
+  "input": "c:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\tree\\candidate.json",
+  "output": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\tree\\deckstudio-tree.html",
+  "specification": {
+    "sha256": "073c4053cd588c6bc5fcdcc4e01da53244ce17efd1da35d65d924c77bac0e3a8",
+    "bytes": 4303
+  },
+  "artifact": {
+    "sha256": "8e4ad683a7a97fb73a1273b49d58588fe4185af4d8f3a8052e699d3ce62c6713",
+    "bytes": 827120
+  }
+}

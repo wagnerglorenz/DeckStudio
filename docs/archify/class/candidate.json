@@ -1,0 +1,206 @@
+{
+  "schema_version": 1,
+  "diagram_type": "class",
+  "meta": {
+    "title": "DeckStudio — Structs e Contratos Principais em Rust",
+    "locale": "pt-BR",
+    "output": "docs/archify/class/deckstudio-class.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/wagnerglorenz/DeckStudio.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "ba55fa104da70fb050df0ce3a69913017efdf260"
+    }
+  },
+  "layout": {
+    "mode": "grid"
+  },
+  "types": [
+    {
+      "id": "engine_shared",
+      "label": "EngineShared",
+      "kind": "class",
+      "sublabel": "Estado compartilhado Thread-Safe",
+      "row": 0,
+      "col": 1,
+      "attributes": [
+        { "name": "config", "type": "Arc<RwLock<AppConfig>>", "visibility": "public" },
+        { "name": "rt_handle", "type": "tokio::runtime::Handle", "visibility": "public" },
+        { "name": "render_cache", "type": "Mutex<HashMap<u64, RgbImage>>", "visibility": "public" },
+        { "name": "nic_info", "type": "RwLock<(String, u64)>", "visibility": "public" }
+      ],
+      "methods": [
+        { "name": "dispatch_button_press", "parameters": "pos, grid_key, act", "returns": "Option<String>", "visibility": "public" },
+        { "name": "handle_nav", "parameters": "cmd: NavCmd", "visibility": "public" },
+        { "name": "build_health", "returns": "EngineHealth", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/state.rs", "line": 34, "end_line": 106, "label": "EngineShared" }
+      ]
+    },
+    {
+      "id": "app_config",
+      "label": "AppConfig",
+      "kind": "record",
+      "sublabel": "deck-core::config",
+      "row": 0,
+      "col": 0,
+      "attributes": [
+        { "name": "device", "type": "DeviceConfig", "visibility": "public" },
+        { "name": "sensor_sources", "type": "SensorSourcesConfig", "visibility": "public" },
+        { "name": "profiles", "type": "BTreeMap<ProfileConfig>", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/config.rs", "line": 7, "end_line": 18, "label": "AppConfig" }
+      ]
+    },
+    {
+      "id": "nav_state",
+      "label": "NavState",
+      "kind": "record",
+      "sublabel": "Navegação ativa e pastas",
+      "row": 0,
+      "col": 2,
+      "attributes": [
+        { "name": "profile", "type": "String", "visibility": "public" },
+        { "name": "page", "type": "String", "visibility": "public" },
+        { "name": "folder_stack", "type": "Vec<String>", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/state.rs", "line": 18, "end_line": 32, "label": "NavState" }
+      ]
+    },
+    {
+      "id": "device_mgr",
+      "label": "DeviceManager",
+      "kind": "class",
+      "sublabel": "Fila limitada + threads writer/reader",
+      "row": 1,
+      "col": 0,
+      "attributes": [
+        { "name": "state", "type": "Arc<(Mutex<PendingState>, Condvar)>", "visibility": "private" },
+        { "name": "stop", "type": "Arc<AtomicBool>", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "start", "parameters": "rate, brightness, on_button", "returns": "Result<Self, String>", "visibility": "public", "static": true },
+        { "name": "queue_grid_image", "parameters": "grid_key, img", "returns": "Result<bool, String>", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/device.rs", "line": 48, "end_line": 175, "label": "DeviceManager" }
+      ]
+    },
+    {
+      "id": "sensor_hub",
+      "label": "SensorHub",
+      "kind": "class",
+      "sublabel": "Orquestra 4 fontes + histórico 30 pts",
+      "row": 1,
+      "col": 1,
+      "attributes": [
+        { "name": "aida", "type": "Aida64Reader", "visibility": "private" },
+        { "name": "native", "type": "NativeMonitor", "visibility": "private" },
+        { "name": "next_libre_probe", "type": "Option<Instant>", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "refresh", "parameters": "cfg: &SensorSourcesConfig", "returns": "HashMap<String, f64>", "visibility": "public" },
+        { "name": "reset_backoff", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/sensors/mod.rs", "line": 17, "end_line": 50, "label": "SensorHub" }
+      ]
+    },
+    {
+      "id": "obs_client",
+      "label": "ObsClient",
+      "kind": "class",
+      "sublabel": "WebSocket v5 assíncrono",
+      "row": 1,
+      "col": 2,
+      "attributes": [
+        { "name": "state", "type": "Arc<RwLock<ObsState>>", "visibility": "public" },
+        { "name": "tx", "type": "Mutex<Option<Sender<ObsCmd>>>", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "is_connected", "returns": "bool", "visibility": "public" },
+        { "name": "send", "parameters": "cmd: ObsCmd", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/obs.rs", "line": 37, "end_line": 88, "label": "ObsClient" }
+      ]
+    },
+    {
+      "id": "akp_proto",
+      "label": "Akp153eProto",
+      "kind": "class",
+      "sublabel": "Protocolo USB HID 512B",
+      "row": 2,
+      "col": 0,
+      "attributes": [
+        { "name": "dev", "type": "Option<HidDevice>", "visibility": "private" },
+        { "name": "pressed_v2", "type": "HashSet<u8>", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "set_button_jpeg", "parameters": "pos, jpeg", "returns": "Result<(), String>", "visibility": "public" },
+        { "name": "read_event", "parameters": "timeout_ms", "returns": "Result<Option<(u8, InputAction)>>", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/hid_proto.rs", "line": 129, "end_line": 234, "label": "Akp153eProto" }
+      ]
+    },
+    {
+      "id": "native_mon",
+      "label": "NativeMonitor",
+      "kind": "class",
+      "sublabel": "Win32 + lazy nvml.dll",
+      "row": 2,
+      "col": 1,
+      "attributes": [
+        { "name": "nvml", "type": "Option<NvmlHandle>", "visibility": "private" },
+        { "name": "nvml_tried", "type": "bool", "visibility": "private" }
+      ],
+      "methods": [
+        { "name": "sample", "parameters": "poll_nvml: bool", "returns": "NativeSnapshot", "visibility": "public" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/sensors/native_win.rs", "line": 33, "end_line": 215, "label": "NativeMonitor" }
+      ]
+    },
+    {
+      "id": "action_cfg",
+      "label": "ActionConfig",
+      "kind": "enum",
+      "sublabel": "Ações executáveis",
+      "row": 2,
+      "col": 2,
+      "attributes": [
+        { "name": "Page / Folder / FolderBack" },
+        { "name": "Obs { op, name, input }" },
+        { "name": "Hotkey / Run / MultiAction" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/config.rs", "line": 146, "end_line": 170, "label": "ActionConfig enum" }
+      ]
+    }
+  ],
+  "relationships": [
+    { "id": "c_cfg", "from": "engine_shared", "to": "app_config", "kind": "association", "label": "lê/salva" },
+    { "id": "c_nav", "from": "engine_shared", "to": "nav_state", "kind": "composition", "label": "possui" },
+    { "id": "c_dev", "from": "engine_shared", "to": "device_mgr", "kind": "composition", "label": "gerencia" },
+    { "id": "c_sen", "from": "engine_shared", "to": "sensor_hub", "kind": "composition", "label": "atualiza" },
+    { "id": "c_obs", "from": "engine_shared", "to": "obs_client", "kind": "composition", "label": "comanda" },
+    { "id": "c_proto", "from": "device_mgr", "to": "akp_proto", "kind": "composition", "label": "envia/lê" },
+    { "id": "c_nat", "from": "sensor_hub", "to": "native_mon", "kind": "composition", "label": "amostra" },
+    { "id": "c_act", "from": "engine_shared", "to": "action_cfg", "kind": "dependency", "label": "executa" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Isolamento entre Crates",
+      "items": [
+        "deck-core contém apenas DTOs serde sem dependências Win32 ou HID",
+        "deck-engine encapsula HID 512B, Win32, NVML e renderização vetorial"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "receiptId": "4c5ae395-a6b3-4145-8de7-e62997139ee4",
+  "status": "current",
+  "command": "deliver",
+  "type": "sequence",
+  "input": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\sequence\\candidate.json",
+  "output": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\sequence\\deckstudio-sequence.html",
+  "specification": {
+    "sha256": "7be04c5fbfad58b37e0cdab7cb36b17d607aeba0cb2170c200b51bcd4beec8b1",
+    "bytes": 4973
+  },
+  "artifact": {
+    "sha256": "6f9a720d981b4d6d6cdc041dbeef2dffb9bb72d4868d99b2a3a9f1bcc32b6156",
+    "bytes": 817344
+  }
+}

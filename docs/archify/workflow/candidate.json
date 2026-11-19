@@ -1,0 +1,167 @@
+{
+  "schema_version": 2,
+  "diagram_type": "workflow",
+  "meta": {
+    "title": "DeckStudio — Fluxo de Mudança, Impacto, Testes e Release",
+    "locale": "pt-BR",
+    "output": "docs/archify/workflow/deckstudio-workflow.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/wagnerglorenz/DeckStudio.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "ba55fa104da70fb050df0ce3a69913017efdf260"
+    }
+  },
+  "lanes": [
+    { "id": "dev", "label": "Engenharia & Archify" },
+    { "id": "quality", "label": "Validação & Simulação" },
+    { "id": "policy", "label": "Bloqueios / Rollback", "variant": "exception" },
+    { "id": "release", "label": "Empacotamento & GitHub" }
+  ],
+  "phases": [
+    { "id": "p_design", "label": "1. Impacto + Código", "fromCol": 0, "toCol": 1 },
+    { "id": "p_verify", "label": "2. Testes + Rede", "fromCol": 2, "toCol": 3, "variant": "emphasis" },
+    { "id": "p_ship", "label": "3. Release vX.Y.Z", "fromCol": 4, "toCol": 5, "variant": "dashed" }
+  ],
+  "groups": [
+    { "id": "g_build", "label": "Qualidade automatizada", "lane": "quality", "fromCol": 1, "toCol": 3, "variant": "emphasis" },
+    { "id": "g_block", "label": "Recuperação / Rollback", "lane": "policy", "fromCol": 2, "toCol": 4, "variant": "security" },
+    { "id": "g_pub", "label": "Artefatos versionados", "lane": "release", "fromCol": 3, "toCol": 5, "variant": "dashed" }
+  ],
+  "mainPath": ["archify_check", "edit_code", "unit_tests", "live_bench", "build_stage", "gh_release"],
+  "nodes": [
+    {
+      "id": "archify_check",
+      "lane": "dev",
+      "col": 0,
+      "type": "database",
+      "label": "Matriz Archify",
+      "sublabel": "Avaliar impacto",
+      "tag": "obrigatório",
+      "sources": [
+        { "path": ".agent/rules/release-and-archify-impact.md", "line": 1, "end_line": 18, "label": "Regra Archify" }
+      ]
+    },
+    {
+      "id": "edit_code",
+      "lane": "dev",
+      "col": 1,
+      "type": "backend",
+      "label": "Código + DS",
+      "sublabel": "Rust / Tauri / Tokens",
+      "sources": [
+        { "path": "docs/DESIGN_SYSTEM.md", "line": 1, "end_line": 26, "label": "Regras Design System" }
+      ]
+    },
+    {
+      "id": "update_docs",
+      "lane": "dev",
+      "col": 4,
+      "type": "frontend",
+      "label": "Sync Diagramas",
+      "sublabel": "finalize + docs",
+      "sources": [
+        { "path": "docs/EVOLUTION.md", "line": 1, "end_line": 19, "label": "Histórico de evolução" },
+        { "path": "docs/COMPATIBILITY.md", "line": 1, "end_line": 34, "label": "Matriz compatibilidade" }
+      ]
+    },
+    {
+      "id": "unit_tests",
+      "lane": "quality",
+      "col": 2,
+      "type": "messagebus",
+      "label": "cargo test 16",
+      "sublabel": "Mock OBS v5 + HID",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/main.rs", "line": 898, "end_line": 1012, "label": "Simulação botões" }
+      ]
+    },
+    {
+      "id": "live_bench",
+      "lane": "quality",
+      "col": 3,
+      "type": "messagebus",
+      "label": "Sim IPC + iperf3",
+      "sublabel": "RAM + 0% UDP loss",
+      "sources": [
+        { "path": "deckstudio/crates/deck-engine/src/ipc.rs", "line": 145, "end_line": 184, "label": "POST /api/input/press" }
+      ]
+    },
+    {
+      "id": "gate_fail",
+      "lane": "policy",
+      "col": 2,
+      "type": "security",
+      "label": "Falha Testes",
+      "sublabel": "Cargo / Panic",
+      "tag": "aborta release"
+    },
+    {
+      "id": "fix_loop",
+      "lane": "policy",
+      "col": 3,
+      "type": "security",
+      "label": "Ajustar & Rollback",
+      "sublabel": "Regressão / .reg",
+      "sources": [
+        { "path": "rollback/restore_stream_dock_ajazz.reg", "line": 1, "end_line": 3, "label": "Backup inicialização" }
+      ]
+    },
+    {
+      "id": "build_stage",
+      "lane": "release",
+      "col": 4,
+      "type": "backend",
+      "label": "release.ps1",
+      "sublabel": "Release + ZIP + SHA256",
+      "sources": [
+        { "path": "scripts/release.ps1", "line": 1, "end_line": 124, "label": "Pipeline release.ps1" }
+      ]
+    },
+    {
+      "id": "gh_release",
+      "lane": "release",
+      "col": 5,
+      "type": "cloud",
+      "label": "Tag + GitHub",
+      "sublabel": "Repo Privado MIT",
+      "tag": "vX.Y.Z",
+      "sources": [
+        { "path": "scripts/release.ps1", "line": 125, "end_line": 150, "label": "Tag Git e gh release" },
+        { "path": "CHANGELOG.md", "line": 1, "end_line": 29, "label": "Registro CHANGELOG" }
+      ]
+    }
+  ],
+  "edges": [
+    { "id": "e1", "from": "archify_check", "to": "edit_code", "label": "escopo", "variant": "emphasis" },
+    { "id": "e2", "from": "edit_code", "to": "unit_tests", "variant": "emphasis" },
+    { "id": "e3", "from": "unit_tests", "to": "live_bench", "label": "16/16 OK", "variant": "emphasis" },
+    { "id": "e4", "from": "unit_tests", "to": "gate_fail", "label": "falhou", "variant": "security", "role": "error" },
+    { "id": "e5", "from": "live_bench", "to": "fix_loop", "label": ">0% perda", "variant": "security", "role": "error" },
+    { "id": "e6", "from": "gate_fail", "to": "fix_loop", "variant": "security", "role": "branch" },
+    { "id": "e7", "from": "fix_loop", "to": "edit_code", "label": "corrigir", "variant": "dashed", "role": "return" },
+    { "id": "e8", "from": "live_bench", "to": "update_docs", "label": "métricas ok", "variant": "dashed", "role": "branch" },
+    { "id": "e9", "from": "live_bench", "to": "build_stage", "label": "aprovado", "variant": "emphasis" },
+    { "id": "e10", "from": "update_docs", "to": "build_stage", "variant": "dashed" },
+    { "id": "e11", "from": "build_stage", "to": "gh_release", "label": "ZIP + SHA256", "variant": "emphasis" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Portões Obrigatórios",
+      "items": [
+        "Nenhuma release é gerada sem passar 100% de cargo test --workspace",
+        "Alterações de thread/rede exigem nova checagem de perda UDP e descartes Realtek"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Entregáveis por Versão",
+      "items": [
+        "ZIP portável com deck-engine.exe, deck-studio.exe, LICENSE e docs",
+        "SHA256SUMS.txt, tag anotada Git e GitHub Release em repo privado"
+      ]
+    }
+  ]
+}

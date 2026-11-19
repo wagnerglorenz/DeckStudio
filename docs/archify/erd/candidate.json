@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "diagram_type": "erd",
+  "meta": {
+    "title": "DeckStudio — Modelo de Configuração Persistente (AppConfig)",
+    "locale": "pt-BR",
+    "output": "docs/archify/erd/deckstudio-erd.html",
+    "quality_profile": "showcase",
+    "repository": {
+      "url": "https://github.com/wagnerglorenz/DeckStudio.git",
+      "provider": "github",
+      "link_mode": "local-only",
+      "revision": "ba55fa104da70fb050df0ce3a69913017efdf260"
+    }
+  },
+  "layout": {
+    "mode": "grid",
+    "gapX": 70,
+    "gapY": 38
+  },
+  "entities": [
+    {
+      "id": "app_config",
+      "label": "app_config",
+      "tag": "core",
+      "row": 0,
+      "col": 0,
+      "attributes": [
+        { "name": "config_path", "type": "string", "key": "pk" },
+        { "name": "active_theme", "type": "string", "key": "fk", "references": "theme_config.name" },
+        { "name": "active_profile", "type": "string", "key": "fk", "references": "profile_config.id" },
+        { "name": "device_id", "type": "string", "key": "fk", "references": "device_config.id" },
+        { "name": "sources_id", "type": "string", "key": "fk", "references": "sensor_sources_config.id" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/config.rs", "line": 7, "end_line": 18, "label": "struct AppConfig" }
+      ]
+    },
+    {
+      "id": "device_config",
+      "label": "device_config",
+      "tag": "core",
+      "row": 1,
+      "col": 0,
+      "attributes": [
+        { "name": "id", "type": "string", "key": "pk" },
+        { "name": "brightness", "type": "u8" },
+        { "name": "refresh_ms", "type": "u64" },
+        { "name": "max_tiles_per_s", "type": "f32" },
+        { "name": "night_mode_id", "type": "string", "key": "fk", "references": "night_mode_config.id" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/config.rs", "line": 22, "end_line": 27, "label": "struct DeviceConfig" }
+      ]
+    },
+    {
+      "id": "night_mode_config",
+      "label": "night_mode_config",
+      "tag": "core",
+      "row": 2,
+      "col": 0,
+      "attributes": [
+        { "name": "id", "type": "string", "key": "pk" },
+        { "name": "enabled", "type": "bool" },
+        { "name": "day_hour", "type": "u8" },
+        { "name": "day_brightness", "type": "u8" },
+        { "name": "night_hour", "type": "u8" },
+        { "name": "night_brightness", "type": "u8" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/config.rs", "line": 31, "end_line": 37, "label": "struct NightModeConfig" }
+      ]
+    },
+    {
+      "id": "theme_config",
+      "label": "theme_config",
+      "tag": "visual",
+      "row": 0,
+      "col": 1,
+      "attributes": [
+        { "name": "name", "type": "string", "key": "pk" },
+        { "name": "style", "type": "string" },
+        { "name": "background", "type": "hex" },
+        { "name": "card_bg", "type": "hex" },
+        { "name": "chart", "type": "hex" },
+        { "name": "accent", "type": "hex" },
+        { "name": "temp_colors", "type": "bool" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/config.rs", "line": 41, "end_line": 53, "label": "struct ThemeConfig" }
+      ]
+    },
+    {
+      "id": "color_rules",
+      "label": "color_rules",
+      "tag": "visual",
+      "row": 1,
+      "col": 1,
+      "attributes": [
+        { "name": "config_path", "type": "string", "key": ["pk", "fk"], "references": "app_config.config_path" },
+        { "name": "temp_yellow", "type": "f64" },
+        { "name": "temp_red", "type": "f64" },
+        { "name": "mem_yellow", "type": "f64" },
+        { "name": "mem_red", "type": "f64" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/config.rs", "line": 57, "end_line": 62, "label": "struct ColorRules" }
+      ]
+    },
+    {
+      "id": "sensor_sources_config",
+      "label": "sensor_sources_config",
+      "tag": "telemetry",
+      "row": 0,
+      "col": 2,
+      "attributes": [
+        { "name": "id", "type": "string", "key": "pk" },
+        { "name": "priority", "type": "string[]" },
+        { "name": "aida64_enabled", "type": "bool" },
+        { "name": "aida64_watchdog", "type": "bool" },
+        { "name": "librehwm_enabled", "type": "bool" },
+        { "name": "librehwm_url", "type": "string" },
+        { "name": "hwinfo_enabled", "type": "bool" },
+        { "name": "native_nvml_enabled", "type": "bool" },
+        { "name": "vram_total_mb", "type": "f64" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/config.rs", "line": 66, "end_line": 76, "label": "struct SensorSourcesConfig" }
+      ]
+    },
+    {
+      "id": "obs_config",
+      "label": "obs_config",
+      "tag": "telemetry",
+      "row": 1,
+      "col": 2,
+      "attributes": [
+        { "name": "config_path", "type": "string", "key": ["pk", "fk"], "references": "app_config.config_path" },
+        { "name": "host", "type": "string" },
+        { "name": "port", "type": "u16" },
+        { "name": "password_env", "type": "string" },
+        { "name": "password", "type": "string" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/config.rs", "line": 80, "end_line": 85, "label": "struct ObsConfig" }
+      ]
+    },
+    {
+      "id": "weather_config",
+      "label": "weather_config",
+      "tag": "telemetry",
+      "row": 2,
+      "col": 2,
+      "attributes": [
+        { "name": "config_path", "type": "string", "key": ["pk", "fk"], "references": "app_config.config_path" },
+        { "name": "city", "type": "string" },
+        { "name": "lat", "type": "f64" },
+        { "name": "lon", "type": "f64" },
+        { "name": "refresh_minutes", "type": "u64" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/config.rs", "line": 89, "end_line": 94, "label": "struct WeatherConfig" }
+      ]
+    },
+    {
+      "id": "profile_config",
+      "label": "profile_config",
+      "tag": "layout",
+      "row": 0,
+      "col": 3,
+      "attributes": [
+        { "name": "id", "type": "string", "key": "pk" },
+        { "name": "name", "type": "string" },
+        { "name": "pages", "type": "json_map" },
+        { "name": "folders", "type": "json_map" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/config.rs", "line": 115, "end_line": 120, "label": "struct ProfileConfig" }
+      ]
+    },
+    {
+      "id": "tile_config",
+      "label": "tile_config",
+      "tag": "layout",
+      "row": 1,
+      "col": 3,
+      "attributes": [
+        { "name": "grid_key", "type": "string", "key": "pk" },
+        { "name": "profile_id", "type": "string", "key": ["pk", "fk"], "references": "profile_config.id" },
+        { "name": "kind", "type": "string" },
+        { "name": "title", "type": "string" },
+        { "name": "widget", "type": "string" },
+        { "name": "sensor_id", "type": "string" },
+        { "name": "action_id", "type": "string", "key": "fk", "references": "action_config.id" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/config.rs", "line": 124, "end_line": 142, "label": "struct TileConfig" }
+      ]
+    },
+    {
+      "id": "action_config",
+      "label": "action_config",
+      "tag": "layout",
+      "row": 2,
+      "col": 3,
+      "attributes": [
+        { "name": "id", "type": "string", "key": "pk" },
+        { "name": "kind", "type": "enum" },
+        { "name": "target", "type": "string" },
+        { "name": "op", "type": "string" },
+        { "name": "program", "type": "string" }
+      ],
+      "sources": [
+        { "path": "deckstudio/crates/deck-core/src/config.rs", "line": 146, "end_line": 170, "label": "enum ActionConfig" }
+      ]
+    }
+  ],
+  "relationships": [
+    { "id": "r_app_dev", "from": "app_config", "to": "device_config", "fromCardinality": "one", "toCardinality": "one", "label": "usa" },
+    { "id": "r_dev_night", "from": "device_config", "to": "night_mode_config", "fromCardinality": "one", "toCardinality": "one", "identifying": false, "variant": "dashed" },
+    { "id": "r_app_theme", "from": "app_config", "to": "theme_config", "fromCardinality": "many", "toCardinality": "one", "label": "ativo" },
+    { "id": "r_app_rules", "from": "app_config", "to": "color_rules", "fromCardinality": "one", "toCardinality": "one" },
+    { "id": "r_app_src", "from": "app_config", "to": "sensor_sources_config", "fromCardinality": "one", "toCardinality": "one" },
+    { "id": "r_app_obs", "from": "app_config", "to": "obs_config", "fromCardinality": "one", "toCardinality": "one", "identifying": false, "variant": "dashed" },
+    { "id": "r_app_weather", "from": "app_config", "to": "weather_config", "fromCardinality": "one", "toCardinality": "one", "identifying": false, "variant": "dashed" },
+    { "id": "r_app_prof", "from": "app_config", "to": "profile_config", "fromCardinality": "one", "toCardinality": "many", "label": "possui" },
+    { "id": "r_prof_tile", "from": "profile_config", "to": "tile_config", "fromCardinality": "one", "toCardinality": "many", "label": "contém" },
+    { "id": "r_tile_act", "from": "tile_config", "to": "action_config", "fromCardinality": "one", "toCardinality": "one", "toOptional": true, "identifying": false, "variant": "dashed" }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Persistência Única",
+      "items": [
+        "Serializado em %APPDATA%\\DeckStudio\\config.json via serde_json",
+        "PUT /api/config reinicia backoff de sensores e invalida cache de renderização"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Impacto de Schema",
+      "items": [
+        "Alterações em deck-core/src/config.rs impactam deck-engine e types.ts do editor",
+        "Campos novos usam #[serde(default)] para retrocompatibilidade com JSON existente"
+      ]
+    }
+  ]
+}
