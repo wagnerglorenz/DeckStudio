@@ -40,21 +40,24 @@
 
 ## Arquitetura, Design System & Documentação
 
+- **Manual Completo do App (Funcionalidades, Ações, Sensores, Clima & Segurança):** [docs/MANUAL.md](docs/MANUAL.md)
 - **Design System (`tokens.css` + componentes React):** [docs/DESIGN_SYSTEM.md](docs/DESIGN_SYSTEM.md)
+- **Compatibilidade de Hardware & Protocolo HID:** [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)
 - **Histórico & Benchmarks de Evolução:** [docs/EVOLUTION.md](docs/EVOLUTION.md) & [CHANGELOG.md](CHANGELOG.md)
 - **Análise de Impacto (Todos os 10 Diagramas Archify):** [docs/archify/README.md](docs/archify/README.md)
 
 ## Compilação, Testes e Release
 
 ```powershell
-# Rodar suíte completa (16 testes, incluindo mock OBS WebSocket v5)
+# Rodar suíte completa (25 testes Rust: deck-core + deck-engine)
 Set-Location deckstudio
+cargo clippy --workspace --all-targets -- -D warnings
 cargo test --workspace
 
-# Gerar Release versionado (compila, testa, empacota ZIP + SHA256 + Tag + GitHub Release)
+# Gerar Release versionado (compila, testa, gera instalador NSIS + SHA256SUMS + GitHub Release)
 Set-Location ..
-.\scripts\release.ps1 -Version "0.2.0" -PublishGitHub
+.\scripts\release.ps1 -Version "0.4.10" -Publish
 ```
 
 ## Rollback para o Software Oficial
-Se precisar restaurar a inicialização original, importe [rollback/restore_stream_dock_ajazz.reg](rollback/restore_stream_dock_ajazz.reg). O protótipo original em Python permanece arquivado em [ajazz_monitor/](ajazz_monitor/) para referência técnica.
+Se precisar restaurar a inicialização original, importe [rollback/restore_stream_dock_ajazz.reg](rollback/restore_stream_dock_ajazz.reg). O protótipo original em Python permanece arquivado em [legacy_monitor/](legacy_monitor/) para referência técnica.
