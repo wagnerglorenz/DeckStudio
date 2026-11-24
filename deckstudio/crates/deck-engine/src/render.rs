@@ -400,8 +400,8 @@ pub fn render_sensor_tile(
         _ => None,
     };
 
-    if theme.style == "ajazz" {
-        return render_ajazz_sparkline(title, value_text, unit, history, vmin, vmax, theme, &accent, is_temp);
+    if theme.style == "classic_spark" {
+        return render_classic_sparkline(title, value_text, unit, history, vmin, vmax, theme, &accent, is_temp);
     }
 
     if card_style == Some("ring") {
@@ -546,7 +546,7 @@ fn render_llm_card(
 }
 
 #[allow(clippy::too_many_arguments)]
-fn render_ajazz_sparkline(
+fn render_classic_sparkline(
     title: &str,
     value_text: &str,
     unit: &str,
@@ -652,7 +652,7 @@ pub fn render_nav_circle_tile(direction: &str, theme: &ThemeConfig) -> RgbImage 
     let mut pm = Pixmap::new(CANVAS_SZ, CANVAS_SZ).unwrap();
     draw_themed_surface(&mut pm, theme, None, None, Some(&theme.accent));
     let c = CANVAS_SZ as f32 * 0.5;
-    let ring_col = if theme.style == "ajazz" { "#FFFFFF" } else { &theme.accent };
+    let ring_col = if theme.style == "classic_spark" { "#FFFFFF" } else { &theme.accent };
     draw_arc_deg(&mut pm, c, c, (TILE_SZ as f32 * 0.5 - 16.0) * SS, 0.0, 360.0, 3.5 * SS, ring_col, false);
 
     let dx = 9.0 * SS;

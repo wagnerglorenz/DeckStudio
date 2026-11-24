@@ -179,7 +179,7 @@ export default function App() {
   const [libFilter, setLibFilter] = useState("");
   const [sensorSearch, setSensorSearch] = useState("");
   const [sensorSourceFilter, setSensorSourceFilter] = useState("all");
-  const [ajazzPath, setAjazzPath] = useState(
+  const [manifestPath, setManifestPath] = useState(
     "%APPDATA%\\HotSpot\\StreamDock\\profiles\\<seu-perfil>.sdProfile\\manifest.json",
   );
   const [toast, setToast] = useState<string>("");
@@ -1589,8 +1589,8 @@ export default function App() {
                           label: "LLM Dashboard (OLED)",
                           desc: "Fundo preto profundo sem penumbra + anéis + moldura ciano",
                         },
-                        ajazz: {
-                          label: "AJAZZ Clássico",
+                        classic_spark: {
+                          label: "Spark Clássico",
                           desc: "Sparkline degradê magenta + unidades sobrescritas",
                         },
                         cyberpunk: {
@@ -1852,17 +1852,17 @@ export default function App() {
                     )}
                   </div>
                   <div className="row-box" style={{ flexDirection: "column", alignItems: "stretch" }}>
-                    <strong style={{ fontSize: 13 }}>Importar Perfil do Stream Dock AJAZZ</strong>
+                    <strong style={{ fontSize: 13 }}>Importar Perfil (Stream Dock / Mirabox)</strong>
                     <div style={{ display: "flex", gap: 8 }}>
-                      <input className="input" style={{ flex: 1 }} value={ajazzPath} onChange={(e) => setAjazzPath(e.target.value)} />
+                      <input className="input" style={{ flex: 1 }} value={manifestPath} onChange={(e) => setManifestPath(e.target.value)} />
                       <button
                         className="btn primary"
                         onClick={() =>
                           api
-                            .importAjazz(ajazzPath, "ajazz_imported", "Importado AJAZZ")
+                            .importManifest(manifestPath, "imported_profile", "Perfil Importado")
                             .then((c) => {
                               setCfg(c);
-                              notify("Perfil AJAZZ importado!");
+                              notify("Perfil importado!");
                             })
                             .catch((e) => notify(`Erro: ${String(e)}`))
                         }
@@ -2230,9 +2230,9 @@ export default function App() {
                 <div className="about-hero">
                   <DeckLogo size={76} />
                   <div style={{ flex: 1 }}>
-                    <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--ds-text-bright)" }}>DeckStudio v0.3.0</h1>
+                    <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--ds-text-bright)" }}>DeckStudio v0.4.6</h1>
                     <p style={{ fontSize: 13.5, color: "var(--ds-text-muted)", marginTop: 4 }}>
-                      Alternativa nativa, leve e 100% gratuita ao software oficial da AJAZZ — sem WebView residente e com zero perda de pacotes em rede.
+                      Alternativa nativa, leve e 100% gratuita ao software oficial de Stream Docks compatíveis — sem WebView residente e com zero perda de pacotes em rede.
                     </p>
                     <div className="badge-row">
                       <StatusPill dot="green" accent="var(--ds-semantic-success)">100% Gratuito</StatusPill>

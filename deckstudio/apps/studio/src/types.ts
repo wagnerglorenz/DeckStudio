@@ -15,7 +15,7 @@ export interface DeviceConfig {
 
 export interface ThemeConfig {
   name: string;
-  style: "llm_dash" | "ajazz" | "cyberpunk" | "matrix" | "obsidian_pro" | string;
+  style: "llm_dash" | "classic_spark" | "cyberpunk" | "matrix" | "obsidian_pro" | string;
   surface_style?: string;
   background: string;
   card_bg: string;

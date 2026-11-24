@@ -2,6 +2,13 @@
 
 Todas as mudanças notáveis do projeto são registradas aqui seguindo Semantic Versioning (`vX.Y.Z`).
 
+## [0.4.6] - 2026-11-24
+
+### Desacoplamento de Marca & Padronização (`Stream Dock` / `Spark Clássico`)
+- **Tema & Renderização (`deck-core`, `deck-engine`, `studio`):** tema e estilo `ajazz` renomeados para `classic_spark` (**Spark Clássico**) em [config.rs](deckstudio/crates/deck-core/src/config.rs), [render.rs](deckstudio/crates/deck-engine/src/render.rs), [main.rs](deckstudio/crates/deck-engine/src/main.rs), [types.ts](deckstudio/apps/studio/src/types.ts) e [App.tsx](deckstudio/apps/studio/src/App.tsx).
+- **Importação de Perfil & UI:** rota e UI de importação renomeadas para `/api/import/manifest` (`ImportManifestRequest`, `import_stream_dock_manifest_json`, `"Importar Perfil (Stream Dock / Mirabox)"`), mantendo a tabela de compatibilidade de hardware na aba Sobre.
+- **Repositório Raiz:** diretório legado Python renomeado de `ajazz_monitor` para `legacy_monitor` (com `tests/` e `tools/` atualizados).
+
 ## [0.4.5] - 2026-11-24
 
 ### Qualidade & Confiabilidade (Clippy + TypeScript Zero Warnings)

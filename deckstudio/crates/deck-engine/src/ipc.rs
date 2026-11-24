@@ -13,9 +13,9 @@ use axum::routing::{get, post};
 use axum::{Json, Router};
 use base64::Engine as _;
 use deck_core::{
-    default_themes, find_previous_backups, import_ajazz_manifest_json, save_config, ActionConfig,
+    default_themes, find_previous_backups, import_stream_dock_manifest_json, save_config, ActionConfig,
     AppConfig, AutostartStatus, AutostartUpdate, BackupCandidate, EngineHealth,
-    GridPreviewResponse, ImportAjazzRequest, ObsCatalog, SensorReading, SourceStatus,
+    GridPreviewResponse, ImportManifestRequest, ObsCatalog, SensorReading, SourceStatus,
     UpdateCheckResponse, UpdateInstallStatus,
 };
 use serde::Deserialize;
@@ -97,7 +97,7 @@ pub fn build_ipc_router(shared: Arc<EngineShared>) -> Router {
         .route("/api/brightness/:val", post(post_set_brightness))
         .route("/api/page/:name", post(post_set_page))
         .route("/api/profile/:name", post(post_set_profile))
-        .route("/api/import/ajazz", post(post_import_ajazz))
+        .route("/api/import/manifest", post(post_import_manifest))
         .route("/api/backup/export", get(get_backup_export))
         .route("/api/backup/import", post(post_backup_import))
         .route("/api/backup/sources", get(get_backup_sources))
@@ -314,9 +314,9 @@ async fn post_set_profile(State(st): State<Arc<EngineShared>>, AxumPath(name): A
     StatusCode::OK
 }
 
-async fn post_import_ajazz(
+async fn post_import_manifest(
     State(st): State<Arc<EngineShared>>,
-    Json(req): Json<ImportAjazzRequest>,
+    Json(req): Json<ImportManifestRequest>,
 ) -> Result<Json<AppConfig>, (StatusCode, String)> {
     if is_unc_or_device_path(&req.path) {
         return Err((StatusCode::BAD_REQUEST, "Caminho UNC ou inválido não permitido".into()));
@@ -343,7 +343,7 @@ async fn post_import_ajazz(
         .take(1_048_576)
         .read_to_string(&mut raw)
         .map_err(|_| (StatusCode::BAD_REQUEST, "Falha ao ler arquivo".into()))?;
-    let prof = import_ajazz_manifest_json(&raw, &req.profile_name)
+    let prof = import_stream_dock_manifest_json(&raw, &req.profile_name)
         .map_err(|e| (StatusCode::BAD_REQUEST, e))?;
     let updated = {
         let mut cfg = st.config.write().map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "lock".into()))?;

@@ -8,7 +8,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from ajazz_monitor.render import (
+from legacy_monitor.render import (
     BUILTIN_THEMES,
     _font,
     render_button_tile,

@@ -3,8 +3,8 @@ import time
 
 from PIL import Image
 
-from ajazz_monitor.device import DeviceManager
-from ajazz_monitor.device_proto import InputAction
+from legacy_monitor.device import DeviceManager
+from legacy_monitor.device_proto import InputAction
 
 
 class FakeProto:

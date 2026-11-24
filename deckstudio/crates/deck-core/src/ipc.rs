@@ -66,7 +66,7 @@ pub struct GridPreviewResponse {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct ImportAjazzRequest {
+pub struct ImportManifestRequest {
     pub path: String,
     pub profile_id: String,
     pub profile_name: String,

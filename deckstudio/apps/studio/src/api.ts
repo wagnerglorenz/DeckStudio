@@ -70,8 +70,8 @@ export const api = {
   setBrightness: (val: number) => req<void>(`/api/brightness/${val}`, { method: "POST" }),
   setPage: (name: string) => req<void>(`/api/page/${encodeURIComponent(name)}`, { method: "POST" }),
   setProfile: (name: string) => req<void>(`/api/profile/${encodeURIComponent(name)}`, { method: "POST" }),
-  importAjazz: (path: string, profile_id: string, profile_name: string) =>
-    req<AppConfig>("/api/import/ajazz", {
+  importManifest: (path: string, profile_id: string, profile_name: string) =>
+    req<AppConfig>("/api/import/manifest", {
       method: "POST",
       body: JSON.stringify({ path, profile_id, profile_name }),
     }),

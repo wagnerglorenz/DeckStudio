@@ -1,9 +1,9 @@
 """Testes unitários para sensors.py, render.py e config.py."""
 from pathlib import Path
 
-from ajazz_monitor.config import load_config
-from ajazz_monitor.device_proto import sanitize_image
-from ajazz_monitor.render import (
+from legacy_monitor.config import load_config
+from legacy_monitor.device_proto import sanitize_image
+from legacy_monitor.render import (
     BUILTIN_THEMES,
     render_button_tile,
     render_clock_tile,
@@ -18,7 +18,7 @@ from ajazz_monitor.render import (
     temp_color,
     usage_color,
 )
-from ajazz_monitor.sensors import SensorStore, parse_aida_xml
+from legacy_monitor.sensors import SensorStore, parse_aida_xml
 
 
 def test_parse_aida_xml_and_format():

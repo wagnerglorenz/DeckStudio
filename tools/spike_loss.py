@@ -17,7 +17,7 @@ from PIL import Image, ImageDraw
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from ajazz_monitor.device_proto import AKP153EDevice, sanitize_image
+from legacy_monitor.device_proto import AKP153EDevice, sanitize_image
 
 OFFICIAL_PROCESSES = ("Stream Dock AJAZZ.exe", "QtWebEngineProcess.exe")
 

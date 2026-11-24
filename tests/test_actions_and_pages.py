@@ -1,6 +1,6 @@
 """Testes unitários para PageManager e ActionDispatcher."""
-from ajazz_monitor.actions import ActionDispatcher
-from ajazz_monitor.pages import PageManager
+from legacy_monitor.actions import ActionDispatcher
+from legacy_monitor.pages import PageManager
 
 
 class _DummyDevice:

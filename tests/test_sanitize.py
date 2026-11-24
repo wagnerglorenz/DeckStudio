@@ -6,7 +6,7 @@ import random
 import pytest
 from PIL import Image
 
-from ajazz_monitor.device_proto import (
+from legacy_monitor.device_proto import (
     BUTTON_IMAGE_MAX_SIZE,
     INPUT_REQUEST_PREFIX,
     InputAction,

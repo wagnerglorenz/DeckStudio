@@ -696,7 +696,7 @@ fn main() {
     let m_open = MenuItem::new("Abrir DeckStudio", true, None);
     let m_pause = MenuItem::new("Pausar / Retomar", true, None);
     let m_theme_llm = MenuItem::new("Tema: LLM Dashboard", true, None);
-    let m_theme_ajazz = MenuItem::new("Tema: AJAZZ Clássico", true, None);
+    let m_theme_classic = MenuItem::new("Tema: Spark Clássico", true, None);
     let m_br_sub = Submenu::new("Brilho", true);
     let m_b20 = MenuItem::new("20%", true, None);
     let m_b40 = MenuItem::new("40%", true, None);
@@ -710,7 +710,7 @@ fn main() {
         &m_open,
         &PredefinedMenuItem::separator(),
         &m_theme_llm,
-        &m_theme_ajazz,
+        &m_theme_classic,
         &m_br_sub,
         &m_pause,
         &PredefinedMenuItem::separator(),
@@ -743,8 +743,8 @@ fn main() {
                     shared.paused.store(!cur, Ordering::Relaxed);
                 } else if ev.id == m_theme_llm.id() {
                     shared.set_theme("llm_dash");
-                } else if ev.id == m_theme_ajazz.id() {
-                    shared.set_theme("ajazz");
+                } else if ev.id == m_theme_classic.id() {
+                    shared.set_theme("classic_spark");
                 } else if ev.id == m_b20.id() {
                     shared.set_brightness(20);
                 } else if ev.id == m_b40.id() {
@@ -971,7 +971,7 @@ mod button_simulation_tests {
             ("Page", ActionConfig::Page { target: "obs".into() }),
             ("Folder", ActionConfig::Folder { target: "macros".into() }),
             ("FolderBack", ActionConfig::FolderBack),
-            ("Theme", ActionConfig::Theme { target: "ajazz".into() }),
+            ("Theme", ActionConfig::Theme { target: "classic_spark".into() }),
             ("Brightness", ActionConfig::Brightness { value: 80, relative: false }),
             (
                 "MultiAction",

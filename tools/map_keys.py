@@ -14,8 +14,8 @@ from PIL import Image, ImageDraw, ImageFont
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from ajazz_monitor.device import DeviceManager
-from ajazz_monitor.device_proto import InputAction
+from legacy_monitor.device import DeviceManager
+from legacy_monitor.device_proto import InputAction
 
 
 def make_numbered_tile(idx: int) -> Image.Image:

@@ -36,7 +36,7 @@ from .render import (
 from .sensors import SensorStore, format_rate_human
 from .weather import WeatherClient
 
-_logger = logging.getLogger("ajazz_monitor")
+_logger = logging.getLogger("legacy_monitor")
 
 
 def _tray_icon_image() -> Image.Image:
@@ -362,7 +362,7 @@ def main() -> int:
     args = parser.parse_args()
 
     handlers: list[logging.Handler] = [
-        RotatingFileHandler("ajazz_monitor.log", maxBytes=1_000_000, backupCount=2, encoding="utf-8"),
+        RotatingFileHandler("legacy_monitor.log", maxBytes=1_000_000, backupCount=2, encoding="utf-8"),
         logging.StreamHandler(),
     ]
     logging.basicConfig(

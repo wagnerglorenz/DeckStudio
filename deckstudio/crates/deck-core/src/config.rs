@@ -46,7 +46,7 @@ pub struct NightModeConfig {
 #[serde(default)]
 pub struct ThemeConfig {
     pub name: String,
-    pub style: String,         // "llm_dash" | "ajazz" | "cyberpunk" | "matrix" | "obsidian_pro"
+    pub style: String,         // "llm_dash" | "classic_spark" | "cyberpunk" | "matrix" | "obsidian_pro"
     pub surface_style: String, // "oled_frame" | "sparkline" | "cyber_hud" | "matrix_tty" | "obsidian_gold"
     pub background: String,
     pub card_bg: String,
@@ -411,10 +411,10 @@ pub fn default_themes() -> BTreeMap<String, ThemeConfig> {
     let mut map = BTreeMap::new();
     map.insert("llm_dash".into(), ThemeConfig::default());
     map.insert(
-        "ajazz".into(),
+        "classic_spark".into(),
         ThemeConfig {
-            name: "ajazz".into(),
-            style: "ajazz".into(),
+            name: "classic_spark".into(),
+            style: "classic_spark".into(),
             surface_style: "sparkline".into(),
             background: "#090B1A".into(),
             card_bg: "#090B1A".into(),
@@ -819,8 +819,8 @@ pub fn save_config(path: &Path, cfg: &AppConfig) -> Result<(), String> {
     Ok(())
 }
 
-/// Importa um arquivo `manifest.json` do perfil do Stream Dock AJAZZ para um `ProfileConfig`.
-pub fn import_ajazz_manifest_json(raw_json: &str, profile_name: &str) -> Result<ProfileConfig, String> {
+/// Importa um arquivo `manifest.json` de perfil Stream Dock compatível para um `ProfileConfig`.
+pub fn import_stream_dock_manifest_json(raw_json: &str, profile_name: &str) -> Result<ProfileConfig, String> {
     let val: serde_json::Value = serde_json::from_str(raw_json).map_err(|e| format!("JSON inválido: {e}"))?;
     let actions = val
         .get("Actions")
@@ -831,7 +831,7 @@ pub fn import_ajazz_manifest_json(raw_json: &str, profile_name: &str) -> Result<
                 .and_then(|c0| c0.get("Actions"))
                 .and_then(|v| v.as_object())
         })
-        .ok_or_else(|| "Manifest AJAZZ sem objeto Actions".to_string())?;
+        .ok_or_else(|| "Manifest sem objeto Actions".to_string())?;
 
     let mut page = BTreeMap::new();
     for (grid_key, item) in actions {
@@ -932,7 +932,7 @@ mod tests {
     }
 
     #[test]
-    fn import_ajazz_manifest_parses_actions() {
+    fn import_stream_dock_manifest_parses_actions() {
         let sample = r#"{
             "Actions": {
                 "0,0": { "UUID": "com.vivremotion.systemvitals.plugin", "Settings": { "my_title": "GPU Fan", "my_monitor_event": "CUSTOM_LHW_1", "my_libre_key": "GPU_Fan_1" } },
@@ -940,7 +940,7 @@ mod tests {
                 "5,0": { "UUID": "com.hotspot.stream.NetWork" }
             }
         }"#;
-        let prof = import_ajazz_manifest_json(sample, "Importado").unwrap();
+        let prof = import_stream_dock_manifest_json(sample, "Importado").unwrap();
         let p = &prof.pages["principal"];
         assert_eq!(p["0,0"].id.as_deref(), Some("GPU_FAN"));
         assert_eq!(p["0,1"].widget.as_deref(), Some("nav_prev"));
