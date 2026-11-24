@@ -72,6 +72,11 @@ pub struct ImportManifestRequest {
     pub profile_name: String,
 }
 
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct WeatherCepRequest {
+    pub cep: String,
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AutostartStatus {
     pub engine_enabled: bool,

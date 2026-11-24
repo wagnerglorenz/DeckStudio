@@ -71,6 +71,7 @@ pub struct EngineShared {
     pub brightness: AtomicU8,
     pub started_at: Instant,
     pub redraw_notify: Arc<Notify>,
+    pub weather_notify: Arc<Notify>,
     pub should_exit: AtomicBool,
     pub update_status: Arc<RwLock<UpdateInstallStatus>>,
     pub press_times: Mutex<HashMap<u8, Instant>>,

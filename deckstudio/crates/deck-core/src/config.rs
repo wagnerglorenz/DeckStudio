@@ -95,6 +95,7 @@ pub struct ObsConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct WeatherConfig {
+    pub cep: String,
     pub city: String,
     pub lat: f64,
     pub lon: f64,
@@ -315,6 +316,7 @@ impl Default for ObsConfig {
 impl Default for WeatherConfig {
     fn default() -> Self {
         Self {
+            cep: String::new(),
             city: "Santa Maria".into(),
             lat: -29.6842,
             lon: -53.8069,

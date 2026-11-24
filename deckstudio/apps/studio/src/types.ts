@@ -55,6 +55,7 @@ export interface ObsConfig {
 }
 
 export interface WeatherConfig {
+  cep?: string;
   city: string;
   lat: number;
   lon: number;

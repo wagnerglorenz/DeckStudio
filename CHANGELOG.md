@@ -2,6 +2,13 @@
 
 Todas as mudanças notáveis do projeto são registradas aqui seguindo Semantic Versioning (`vX.Y.Z`).
 
+## [0.4.8] - 2026-11-24
+
+### Previsão do Tempo por CEP
+- **Busca Automática por CEP (`deck-core`, `deck-engine`, `studio`):** adicionado campo `cep` em `WeatherConfig` ([config.rs](deckstudio/crates/deck-core/src/config.rs)) e rota autenticada `POST /api/weather/cep` ([ipc.rs](deckstudio/crates/deck-engine/src/ipc.rs)) com `lookup_brazil_cep` ([weather.rs](deckstudio/crates/deck-engine/src/weather.rs)), consultando BrasilAPI v2 / ViaCEP + Open-Meteo Geocoding para preencher automaticamente cidade, latitude e longitude.
+- **Atualização Imediata no Deck:** adicionada notificação `weather_notify` em `spawn_weather_loop` para buscar o clima e redesenhar o tile `5,2` na hora ao salvar configurações ou resolver um CEP.
+- **Interface ([App.tsx](deckstudio/apps/studio/src/App.tsx)):** adicionado campo **CEP** + botão **Buscar CEP** na aba **Saúde** → *Configuração de Clima & OBS*.
+
 ## [0.4.7] - 2026-11-24
 
 ### Polimento Visual (`/unslop` — Hardware Graphite)

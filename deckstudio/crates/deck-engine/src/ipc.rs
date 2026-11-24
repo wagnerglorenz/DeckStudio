@@ -16,7 +16,7 @@ use deck_core::{
     default_themes, find_previous_backups, import_stream_dock_manifest_json, save_config, ActionConfig,
     AppConfig, AutostartStatus, AutostartUpdate, BackupCandidate, EngineHealth,
     GridPreviewResponse, ImportManifestRequest, ObsCatalog, SensorReading, SourceStatus,
-    UpdateCheckResponse, UpdateInstallStatus,
+    UpdateCheckResponse, UpdateInstallStatus, WeatherCepRequest,
 };
 use serde::Deserialize;
 use image::codecs::png::PngEncoder;
@@ -98,6 +98,7 @@ pub fn build_ipc_router(shared: Arc<EngineShared>) -> Router {
         .route("/api/page/:name", post(post_set_page))
         .route("/api/profile/:name", post(post_set_profile))
         .route("/api/import/manifest", post(post_import_manifest))
+        .route("/api/weather/cep", post(post_weather_cep))
         .route("/api/backup/export", get(get_backup_export))
         .route("/api/backup/import", post(post_backup_import))
         .route("/api/backup/sources", get(get_backup_sources))
@@ -188,6 +189,7 @@ async fn put_config(
     st.clear_render_cache();
     st.device.set_brightness(new_cfg.device.brightness);
     st.device.invalidate_cache();
+    st.weather_notify.notify_one();
     st.notify_redraw();
     st.push_log("[CONFIG] Configuração atualizada pelo editor".into());
     Ok(Json(redact_config_for_ipc(new_cfg)))
@@ -353,6 +355,35 @@ async fn post_import_manifest(
         cfg.clone()
     };
     st.device.clear_all();
+    st.notify_redraw();
+    Ok(Json(redact_config_for_ipc(updated)))
+}
+
+async fn post_weather_cep(
+    State(st): State<Arc<EngineShared>>,
+    Json(req): Json<WeatherCepRequest>,
+) -> Result<Json<AppConfig>, (StatusCode, String)> {
+    let (formatted_cep, city, lat, lon) = crate::weather::lookup_brazil_cep(&req.cep)
+        .await
+        .map_err(|e| (StatusCode::BAD_REQUEST, e))?;
+    let updated = {
+        let mut cfg = st
+            .config
+            .write()
+            .map_err(|_| (StatusCode::INTERNAL_SERVER_ERROR, "lock".into()))?;
+        cfg.weather.cep = formatted_cep;
+        cfg.weather.city = city.clone();
+        cfg.weather.lat = lat;
+        cfg.weather.lon = lon;
+        save_config(&st.config_path, &cfg).map_err(|e| (StatusCode::INTERNAL_SERVER_ERROR, e))?;
+        if let Ok(mut w) = st.weather_cfg.write() {
+            *w = cfg.weather.clone();
+        }
+        cfg.clone()
+    };
+    st.push_log(format!("[INFO] Clima configurado via CEP para {city} ({lat:.4}, {lon:.4})"));
+    st.weather_notify.notify_one();
+    st.clear_render_cache();
     st.notify_redraw();
     Ok(Json(redact_config_for_ipc(updated)))
 }

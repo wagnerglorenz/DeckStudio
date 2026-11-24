@@ -75,6 +75,11 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ path, profile_id, profile_name }),
     }),
+  lookupWeatherCep: (cep: string) =>
+    req<AppConfig>("/api/weather/cep", {
+      method: "POST",
+      body: JSON.stringify({ cep }),
+    }),
   exportBackup: () => req<{ exported_at: string; version: string; config: AppConfig }>("/api/backup/export"),
   importBackup: (payload: unknown) =>
     req<AppConfig>("/api/backup/import", { method: "POST", body: JSON.stringify(payload) }),

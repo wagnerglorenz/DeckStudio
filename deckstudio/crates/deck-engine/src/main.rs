@@ -593,6 +593,7 @@ fn main() {
         brightness: AtomicU8::new(cfg.device.brightness),
         started_at: Instant::now(),
         redraw_notify: Arc::clone(&redraw_notify),
+        weather_notify: Arc::new(Notify::new()),
         should_exit: AtomicBool::new(false),
         update_status: Arc::new(RwLock::new(deck_core::UpdateInstallStatus {
             state: "idle".into(),
@@ -616,6 +617,8 @@ fn main() {
     spawn_weather_loop(
         Arc::clone(&shared.weather_cfg),
         Arc::clone(&shared.weather_snap),
+        Arc::clone(&shared.weather_notify),
+        Arc::clone(&shared.redraw_notify),
         Arc::new(move |msg| s_wlog.push_log(msg)),
     );
 
