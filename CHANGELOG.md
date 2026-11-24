@@ -2,6 +2,13 @@
 
 Todas as mudanças notáveis do projeto são registradas aqui seguindo Semantic Versioning (`vX.Y.Z`).
 
+## [0.4.7] - 2026-11-24
+
+### Polimento Visual (`/unslop` — Hardware Graphite)
+- **Tokens & Cores ([tokens.css](deckstudio/apps/studio/src/design-system/tokens.css), [styles.css](deckstudio/apps/studio/src/styles.css)):** rampa grafite neutra (`#0D0E11`–`#232833`) com hairlines sutis, remoção de glows coloridos e gradiente em `.btn.primary`, mantendo o simulador do deck como momento visual principal.
+- **Espaçamento, Tipografia & Motion:** ritmo alinhado à escala de `4px`, redução de pesos `700`/`800` para `400`/`500`/`600`, remoção de `uppercase` em rótulos, `tabular-nums` em KPIs e pills, anéis `:focus-visible` e transições com `cubic-bezier(0.2, 0, 0, 1)`.
+- **Ícones & Copy ([components.tsx](deckstudio/apps/studio/src/design-system/components.tsx), [App.tsx](deckstudio/apps/studio/src/App.tsx)):** substituição dos emojis de navegação e botões por ícones de linha `UiIcon` (`16px`, traço `1.5`) e remoção de pontos de exclamação nos avisos da interface.
+
 ## [0.4.6] - 2026-11-24
 
 ### Desacoplamento de Marca & Padronização (`Stream Dock` / `Spark Clássico`)

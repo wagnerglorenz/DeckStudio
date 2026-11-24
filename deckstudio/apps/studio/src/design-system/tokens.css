@@ -1,61 +1,56 @@
-/* DeckStudio Design System — Tokens Semânticos */
+/* DeckStudio Design System — Tokens Semânticos (Hardware Graphite) */
 :root {
-  /* Fundos e superfícies */
-  --ds-bg-canvas: #0B0F19;
-  --ds-bg-shell: #0D1320;
-  --ds-bg-topbar: #0E1422;
-  --ds-bg-topbar-alt: #0E1525;
-  --ds-bg-card: #0F1727;
-  --ds-bg-elevated: #141F33;
-  --ds-bg-input: #162032;
-  --ds-bg-pill: #131C2E;
-  --ds-bg-btn: #223252;
-  --ds-bg-active: #1A2B49;
-  --ds-bg-deck-top: #1E2430;
-  --ds-bg-deck-bottom: #151922;
-  --ds-bg-slot: #0F1521;
-  --ds-bg-strip: #030509;
-  --ds-bg-code: #070B12;
+  /* Fundos e superfícies (rampa grafite neutra) */
+  --ds-bg-canvas: #0D0E11;
+  --ds-bg-shell: #111317;
+  --ds-bg-topbar: #121419;
+  --ds-bg-topbar-alt: #14171D;
+  --ds-bg-card: #161920;
+  --ds-bg-elevated: #1C2028;
+  --ds-bg-input: #1A1E26;
+  --ds-bg-pill: #1A1E25;
+  --ds-bg-btn: #232833;
+  --ds-bg-active: #1F2937;
+  --ds-bg-deck-top: #1B1E24;
+  --ds-bg-deck-bottom: #121418;
+  --ds-bg-slot: #0E1014;
+  --ds-bg-strip: #08090B;
+  --ds-bg-code: #0A0C0F;
 
-  /* Bordas */
-  --ds-border-subtle: #1E293B;
-  --ds-border-default: #23314A;
-  --ds-border-strong: #2A3B58;
-  --ds-border-btn: #3B5482;
-  --ds-border-deck: #2F394D;
-  --ds-border-slot: #33486B;
+  /* Bordas (hairlines sutis) */
+  --ds-border-subtle: rgba(241, 245, 249, 0.08);
+  --ds-border-default: rgba(241, 245, 249, 0.12);
+  --ds-border-strong: rgba(241, 245, 249, 0.18);
+  --ds-border-btn: rgba(241, 245, 249, 0.16);
+  --ds-border-deck: rgba(241, 245, 249, 0.14);
+  --ds-border-slot: rgba(241, 245, 249, 0.16);
 
-  /* Texto */
-  --ds-text-primary: #E2E8F0;
-  --ds-text-bright: #F1F5F9;
-  --ds-text-secondary: #CBD5E1;
-  --ds-text-muted: #94A3B8;
-  --ds-text-subtle: #64748B;
+  /* Texto (3 papéis principais) */
+  --ds-text-primary: #F1F5F9;
+  --ds-text-bright: #F8FAFC;
+  --ds-text-secondary: #A1A9B8;
+  --ds-text-muted: #70798A;
+  --ds-text-subtle: #646D7E;
 
-  /* Marca e Estados */
+  /* Marca e Estados (1 acento principal + semânticos contidos) */
   --ds-brand-cyan: #22D3EE;
   --ds-brand-sky: #38BDF8;
-  --ds-brand-blue: #2563EB;
+  --ds-brand-blue: #0EA5E9;
   --ds-brand-emerald: #22C55E;
   --ds-brand-indigo: #6366F1;
   --ds-semantic-success: #22C55E;
-  --ds-semantic-success-bg: #14532D;
-  --ds-semantic-success-fg: #DCFCE7;
+  --ds-semantic-success-bg: #133923;
+  --ds-semantic-success-fg: #BBF7D0;
   --ds-semantic-danger: #EF4444;
-  --ds-semantic-danger-bg: #450A0A;
-  --ds-semantic-danger-fg: #FCA5A5;
+  --ds-semantic-danger-bg: #3D1418;
+  --ds-semantic-danger-fg: #FECACA;
   --ds-semantic-warning: #EAB308;
-
-  /* Efeitos & Glows */
-  --ds-glow-cyan: 0 0 16px #22D3EE55;
-  --ds-glow-dot-cyan: 0 0 8px #22D3EE88;
-  --ds-glow-dot-green: 0 0 8px #22C55E88;
 
   /* Tipografia */
   --ds-font-sans: 'Segoe UI', system-ui, -apple-system, sans-serif;
   --ds-font-mono: Consolas, 'Cascadia Code', monospace;
 
-  /* Espaçamento */
+  /* Espaçamento (escala 4px) */
   --ds-space-1: 4px;
   --ds-space-2: 8px;
   --ds-space-3: 12px;
@@ -63,12 +58,17 @@
   --ds-space-5: 20px;
   --ds-space-6: 24px;
 
-  /* Raios */
-  --ds-radius-xs: 5px;
+  /* Raios (escala 4px aninhada) */
+  --ds-radius-xs: 4px;
   --ds-radius-sm: 8px;
-  --ds-radius-md: 11px;
-  --ds-radius-lg: 14px;
-  --ds-radius-xl: 16px;
+  --ds-radius-md: 12px;
+  --ds-radius-lg: 16px;
+  --ds-radius-xl: 20px;
   --ds-radius-2xl: 20px;
   --ds-radius-pill: 99px;
+
+  /* Motion */
+  --ds-ease: cubic-bezier(0.2, 0, 0, 1);
+  --ds-dur-fast: 120ms;
+  --ds-dur-base: 160ms;
 }

@@ -142,3 +142,111 @@ export function Field({ label, children }: { label: string; children: React.Reac
     </div>
   );
 }
+
+export type UiIconName =
+  | "grid"
+  | "sliders"
+  | "plug"
+  | "heart"
+  | "info"
+  | "refresh"
+  | "download"
+  | "activity"
+  | "alert"
+  | "close";
+
+export function UiIcon({ name, size = 16 }: { name: UiIconName; size?: number }) {
+  const common = {
+    width: size,
+    height: size,
+    viewBox: "0 0 24 24",
+    fill: "none",
+    stroke: "currentColor",
+    strokeWidth: 1.5,
+    strokeLinecap: "round" as const,
+    strokeLinejoin: "round" as const,
+    style: { flexShrink: 0, display: "inline-block" },
+    "aria-hidden": true,
+  };
+  switch (name) {
+    case "grid":
+      return (
+        <svg {...common}>
+          <rect x="3" y="3" width="7" height="7" rx="1.5" />
+          <rect x="14" y="3" width="7" height="7" rx="1.5" />
+          <rect x="3" y="14" width="7" height="7" rx="1.5" />
+          <rect x="14" y="14" width="7" height="7" rx="1.5" />
+        </svg>
+      );
+    case "sliders":
+      return (
+        <svg {...common}>
+          <line x1="4" y1="7" x2="20" y2="7" />
+          <circle cx="9" cy="7" r="2" />
+          <line x1="4" y1="17" x2="20" y2="17" />
+          <circle cx="15" cy="17" r="2" />
+        </svg>
+      );
+    case "plug":
+      return (
+        <svg {...common}>
+          <path d="M12 22v-5" />
+          <path d="M9 8V2" />
+          <path d="M15 8V2" />
+          <path d="M18 8v5a6 6 0 0 1-12 0V8z" />
+        </svg>
+      );
+    case "heart":
+      return (
+        <svg {...common}>
+          <path d="M3 12h4l3-7 4 14 3-7h4" />
+        </svg>
+      );
+    case "info":
+      return (
+        <svg {...common}>
+          <circle cx="12" cy="12" r="9" />
+          <path d="M12 16v-4" />
+          <path d="M12 8h.01" />
+        </svg>
+      );
+    case "refresh":
+      return (
+        <svg {...common}>
+          <path d="M21 12a9 9 0 0 0-15.5-6.3L3 8" />
+          <path d="M3 3v5h5" />
+          <path d="M3 12a9 9 0 0 0 15.5 6.3L21 16" />
+          <path d="M21 21v-5h-5" />
+        </svg>
+      );
+    case "download":
+      return (
+        <svg {...common}>
+          <path d="M12 3v12" />
+          <path d="m7 10 5 5 5-5" />
+          <path d="M5 20h14" />
+        </svg>
+      );
+    case "activity":
+      return (
+        <svg {...common}>
+          <path d="M4 12h3l2.5-6 4 12 2.5-6H20" />
+        </svg>
+      );
+    case "alert":
+      return (
+        <svg {...common}>
+          <path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+          <path d="M12 9v4" />
+          <path d="M12 17h.01" />
+        </svg>
+      );
+    case "close":
+      return (
+        <svg {...common}>
+          <path d="M18 6 6 18" />
+          <path d="m6 6 12 12" />
+        </svg>
+      );
+  }
+}

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { api } from "./api";
 import { PAGE_TEMPLATES, POPULAR_APPS } from "./appCatalog";
-import { AppLogoIcon, Button, Card, DeckLogo, ICON_CATALOG, KpiCard, ObsSourcesInspector, StatusPill } from "./design-system";
+import { AppLogoIcon, Button, Card, DeckLogo, ICON_CATALOG, KpiCard, ObsSourcesInspector, StatusPill, UiIcon, type UiIconName } from "./design-system";
 import type {
   ActionConfig,
   ActionStep,
@@ -319,7 +319,7 @@ export default function App() {
       setSavedCfg(saved);
       setCfg(saved);
       await refreshRuntime();
-      notify("Alterações salvas e aplicadas ao vivo!");
+      notify("Alterações salvas e aplicadas ao vivo");
     } catch (e) {
       notify(`Erro ao salvar: ${String(e)}`);
     } finally {
@@ -505,19 +505,19 @@ export default function App() {
         {/* Left Nav Rail */}
         <div className="nav-rail">
           {[
-            { id: "editor" as TabId, label: "Editor", code: "⊞" },
-            { id: "themes" as TabId, label: "Temas", code: "◐" },
-            { id: "profiles" as TabId, label: "Perfis", code: "⚡" },
-            { id: "sources" as TabId, label: "Fontes", code: "🔌" },
-            { id: "health" as TabId, label: "Saúde", code: "♡" },
-            { id: "about" as TabId, label: "Sobre", code: "ⓘ" },
+            { id: "editor" as TabId, label: "Editor", icon: "grid" as UiIconName },
+            { id: "themes" as TabId, label: "Temas", icon: "sliders" as UiIconName },
+            { id: "profiles" as TabId, label: "Perfis", icon: "activity" as UiIconName },
+            { id: "sources" as TabId, label: "Fontes", icon: "plug" as UiIconName },
+            { id: "health" as TabId, label: "Saúde", icon: "heart" as UiIconName },
+            { id: "about" as TabId, label: "Sobre", icon: "info" as UiIconName },
           ].map((item) => (
             <button
               key={item.id}
               className={`nav-btn ${tab === item.id ? "active" : ""}`}
               onClick={() => setTab(item.id)}
             >
-              <span style={{ fontSize: 17 }}>{item.code}</span>
+              <UiIcon name={item.icon} size={18} />
               <span>{item.label}</span>
             </button>
           ))}
@@ -527,9 +527,9 @@ export default function App() {
           {updateInfo?.update_available && !updateDismissed && (
             <div
               style={{
-                background: "linear-gradient(90deg, rgba(2,132,199,0.22), rgba(34,211,238,0.14))",
-                borderBottom: "1px solid var(--ds-brand-cyan)",
-                padding: "8px 18px",
+                background: "var(--ds-bg-elevated)",
+                borderBottom: "1px solid var(--ds-border-default)",
+                padding: "8px 20px",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
@@ -537,16 +537,16 @@ export default function App() {
                 fontSize: 12.5,
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                <span>🚀</span>
+              <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                <UiIcon name="download" size={16} />
                 <span>
-                  <strong>Nova versão v{updateInfo.latest_version} disponível!</strong>{" "}
+                  <strong style={{ fontWeight: 600 }}>Nova versão v{updateInfo.latest_version} disponível</strong>{" "}
                   <span style={{ color: "var(--ds-text-muted)" }}>
                     (Instalada: v{updateInfo.current_version})
                   </span>
                 </span>
                 {updateStatus && updateStatus.state !== "idle" && (
-                  <span style={{ color: "var(--ds-brand-cyan)", fontWeight: 600 }}>
+                  <span style={{ color: "var(--ds-brand-cyan)", fontWeight: 500, fontVariantNumeric: "tabular-nums" }}>
                     {updateStatus.message} ({updateStatus.progress_pct}%)
                   </span>
                 )}
@@ -554,7 +554,7 @@ export default function App() {
               <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                 <button
                   className="btn"
-                  style={{ fontSize: 11, padding: "4px 10px" }}
+                  style={{ fontSize: 11, padding: "4px 12px" }}
                   onClick={() => setTab("about")}
                 >
                   Ver Novidades
@@ -591,8 +591,9 @@ export default function App() {
                   style={{ fontSize: 11, padding: "4px 8px" }}
                   onClick={() => setUpdateDismissed(true)}
                   title="Ocultar aviso nesta sessão"
+                  aria-label="Ocultar aviso"
                 >
-                  ✕
+                  <UiIcon name="close" size={14} />
                 </button>
               </div>
             </div>
@@ -800,7 +801,7 @@ export default function App() {
                             className="btn"
                             onClick={() => {
                               setCopiedTile(JSON.parse(JSON.stringify(selectedTile)));
-                              notify("Tecla copiada!");
+                              notify("Tecla copiada");
                             }}
                           >
                             Copiar
@@ -1288,7 +1289,7 @@ export default function App() {
                                   }}
                                   title="Recarregar cenas e fontes do OBS agora"
                                 >
-                                  🔄 Atualizar ({obsCat.scenes.length} cenas / {obsCat.sources?.length ?? 0} fontes)
+                                  <UiIcon name="refresh" size={14} /> Atualizar ({obsCat.scenes.length} cenas / {obsCat.sources?.length ?? 0} fontes)
                                 </button>
                               )}
                             </div>
@@ -1784,7 +1785,7 @@ export default function App() {
                               a.download = `DeckStudio-Backup-${new Date().toISOString().slice(0, 10)}.json`;
                               a.click();
                               URL.revokeObjectURL(url);
-                              notify("Backup completo exportado!");
+                              notify("Backup completo exportado");
                             } catch (e) {
                               notify(`Erro ao exportar: ${String(e)}`);
                             }
@@ -1810,7 +1811,7 @@ export default function App() {
                                     .then((c) => {
                                       setCfg(c);
                                       setSavedCfg(c);
-                                      notify("Backup importado e aplicado!");
+                                      notify("Backup importado e aplicado");
                                     })
                                     .catch((err) => notify(`Erro: ${String(err)}`));
                                 } catch {
@@ -1839,7 +1840,7 @@ export default function App() {
                                   .then((c) => {
                                     setCfg(c);
                                     setSavedCfg(c);
-                                    notify("Configuração restaurada!");
+                                    notify("Configuração restaurada");
                                   })
                                   .catch((err) => notify(`Erro: ${String(err)}`))
                               }
@@ -1862,7 +1863,7 @@ export default function App() {
                             .importManifest(manifestPath, "imported_profile", "Perfil Importado")
                             .then((c) => {
                               setCfg(c);
-                              notify("Perfil importado!");
+                              notify("Perfil importado");
                             })
                             .catch((e) => notify(`Erro: ${String(e)}`))
                         }
@@ -1944,14 +1945,14 @@ export default function App() {
                       onClick={async () => {
                         try {
                           await api.runSensorDoctor();
-                          notify("Sensor Doctor aberto em uma janela PowerShell!");
+                          notify("Sensor Doctor aberto em uma janela PowerShell");
                         } catch (e) {
                           notify(`Erro ao abrir Sensor Doctor: ${String(e)}`);
                         }
                       }}
                       title="Executa scripts/sensor-doctor.ps1 para diagnosticar AIDA64, LibreHardwareMonitor, HWiNFO e NVML"
                     >
-                      🩺 Rodar Script Sensor Doctor
+                      <UiIcon name="activity" size={14} /> Rodar Sensor Doctor
                     </button>
                   </h2>
                   <p style={{ fontSize: 12, color: "#94A3B8" }}>
@@ -2171,7 +2172,7 @@ export default function App() {
                           try {
                             const res = await api.setAutostart(e.target.checked, autostart?.dash_enabled ?? false);
                             setAutostart(res);
-                            notify(res.engine_enabled ? "Motor adicionado ao boot do Windows!" : "Motor removido do boot do Windows.");
+                            notify(res.engine_enabled ? "Motor adicionado ao boot do Windows" : "Motor removido do boot do Windows");
                           } catch (err) {
                             notify(`Erro ao configurar boot: ${String(err)}`);
                           }
@@ -2187,7 +2188,7 @@ export default function App() {
                           try {
                             const res = await api.setAutostart(autostart?.engine_enabled ?? true, e.target.checked);
                             setAutostart(res);
-                            notify(res.dash_enabled ? "Dash configurada para abrir ao ligar o PC!" : "Abertura automática da Dash desativada.");
+                            notify(res.dash_enabled ? "Dash configurada para abrir ao ligar o PC" : "Abertura automática da Dash desativada");
                           } catch (err) {
                             notify(`Erro ao configurar boot da Dash: ${String(err)}`);
                           }
@@ -2230,7 +2231,7 @@ export default function App() {
                 <div className="about-hero">
                   <DeckLogo size={76} />
                   <div style={{ flex: 1 }}>
-                    <h1 style={{ fontSize: 22, fontWeight: 800, color: "var(--ds-text-bright)" }}>DeckStudio v0.4.6</h1>
+                    <h1 style={{ fontSize: 22, fontWeight: 600, color: "var(--ds-text-bright)" }}>DeckStudio v0.4.7</h1>
                     <p style={{ fontSize: 13.5, color: "var(--ds-text-muted)", marginTop: 4 }}>
                       Alternativa nativa, leve e 100% gratuita ao software oficial de Stream Docks compatíveis — sem WebView residente e com zero perda de pacotes em rede.
                     </p>
@@ -2252,13 +2253,13 @@ export default function App() {
               <Card title="Atualizações do Aplicativo (Auto-Updater)">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <div style={{ fontSize: 12.5, color: "var(--ds-text-secondary)" }}>
-                    Versão instalada: <code>v{updateInfo?.current_version ?? "0.3.0"}</code>
+                    Versão instalada: <code>v{updateInfo?.current_version ?? "0.4.7"}</code>
                     {updateInfo?.latest_version && (
                       <> · Última verificada: <code>v{updateInfo.latest_version}</code></>
                     )}
                     {updateInfo?.error && (
-                      <div style={{ color: "var(--ds-semantic-warning)", fontSize: 11.5, marginTop: 4 }}>
-                        ⚠️ {updateInfo.error}
+                      <div style={{ color: "var(--ds-semantic-warning)", fontSize: 12, marginTop: 4, display: "flex", alignItems: "center", gap: 6 }}>
+                        <UiIcon name="alert" size={14} /> {updateInfo.error}
                       </div>
                     )}
                   </div>
@@ -2273,10 +2274,10 @@ export default function App() {
                           setUpdateDismissed(false);
                           notify(
                             res.update_available
-                              ? `Nova versão v${res.latest_version} disponível!`
+                              ? `Nova versão v${res.latest_version} disponível`
                               : res.error
                                 ? `Aviso: ${res.error}`
-                                : `Você já está na versão mais recente (v${res.current_version}).`,
+                                : `Você já está na versão mais recente (v${res.current_version})`,
                           );
                         } catch (e) {
                           notify(`Erro ao verificar atualização: ${String(e)}`);
@@ -2285,7 +2286,7 @@ export default function App() {
                         }
                       }}
                     >
-                      {checkingUpdate ? "Verificando..." : "🔄 Verificar Atualizações"}
+                      <UiIcon name="refresh" size={14} /> {checkingUpdate ? "Verificando..." : "Verificar Atualizações"}
                     </Button>
                     {updateInfo?.update_available && (
                       <Button
@@ -2304,7 +2305,7 @@ export default function App() {
                           }, 500);
                         }}
                       >
-                        🚀 Atualizar para v{updateInfo.latest_version}
+                        <UiIcon name="download" size={14} /> Atualizar para v{updateInfo.latest_version}
                       </Button>
                     )}
                   </div>

@@ -7,6 +7,8 @@ export {
   Card,
   KpiCard,
   Field,
+  UiIcon,
+  type UiIconName,
   type ButtonVariant,
   type ButtonProps,
 } from "./components";
