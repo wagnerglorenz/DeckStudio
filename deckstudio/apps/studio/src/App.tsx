@@ -617,11 +617,25 @@ export default function App() {
                   </select>
                   <select
                     value={cfg.active_theme}
-                    onChange={(e) => api.setTheme(e.target.value).then(refreshRuntime)}
+                    onChange={(e) => {
+                      const nextTheme = e.target.value;
+                      setCfg({ ...cfg, active_theme: nextTheme });
+                      setSavedCfg((prev) => (prev ? { ...prev, active_theme: nextTheme } : prev));
+                      api.setTheme(nextTheme).then(refreshRuntime);
+                    }}
                   >
-                    {Object.keys(cfg.themes).map((t) => (
-                      <option key={t} value={t}>Tema: {t === "llm_dash" ? "LLM Dashboard" : t}</option>
-                    ))}
+                    {Object.keys(cfg.themes).map((t) => {
+                      const labels: Record<string, string> = {
+                        llm_dash: "LLM Dashboard",
+                        classic_spark: "Spark Clássico",
+                        cyberpunk: "Cyberpunk",
+                        matrix: "Matrix",
+                        obsidian_pro: "Obsidian Pro",
+                      };
+                      return (
+                        <option key={t} value={t}>Tema: {labels[t] ?? t}</option>
+                      );
+                    })}
                   </select>
                 </div>
                 <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
@@ -1969,9 +1983,17 @@ export default function App() {
                         borderColor: src.active ? "#22D3EE" : "#22324F",
                       }}
                     >
-                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                        <strong>{idx + 1}. {src.name}</strong>
-                        <span className="pill" style={{ color: src.active ? "#22C55E" : "#94A3B8" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", flexWrap: "wrap", gap: 8 }}>
+                        <strong style={{ whiteSpace: "nowrap" }}>{idx + 1}. {src.name}</strong>
+                        <span
+                          className="pill"
+                          style={{
+                            color: src.active ? "#22C55E" : "#94A3B8",
+                            maxWidth: "100%",
+                            whiteSpace: "normal",
+                            lineHeight: 1.35,
+                          }}
+                        >
                           <span className={`dot ${src.active ? "green" : "gray"}`} />
                           {src.status_text}
                         </span>
@@ -2019,12 +2041,12 @@ export default function App() {
                       <option value="hwinfo">HWiNFO64</option>
                     </select>
                   </div>
-                  <div style={{ display: "flex", flexDirection: "column", gap: 6, overflowY: "auto", maxHeight: 580 }}>
+                  <div style={{ display: "flex", flexDirection: "column", gap: 8, overflowY: "auto", minHeight: 280, maxHeight: "calc(100vh - 240px)", resize: "vertical" }}>
                     {filteredReadings.slice(0, 60).map((r) => (
-                      <div key={`${r.source}_${r.id}`} className="row-box" style={{ padding: "7px 10px" }}>
-                        <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
+                      <div key={`${r.source}_${r.id}`} className="row-box" style={{ padding: "8px 12px", flexWrap: "wrap" }}>
+                        <div style={{ display: "flex", gap: 8, alignItems: "center", minWidth: 0, flex: "1 1 180px" }}>
                           <code>{r.id}</code>
-                          <span style={{ fontSize: 12 }}>{r.label}</span>
+                          <span style={{ fontSize: 12, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{r.label}</span>
                         </div>
                         <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
                           <span className="pill" style={{ fontSize: 10 }}>{r.source}</span>
@@ -2277,7 +2299,7 @@ export default function App() {
                 <div className="about-hero">
                   <DeckLogo size={76} />
                   <div style={{ flex: 1 }}>
-                    <h1 style={{ fontSize: 22, fontWeight: 600, color: "var(--ds-text-bright)" }}>DeckStudio v0.4.9</h1>
+                    <h1 style={{ fontSize: 22, fontWeight: 600, color: "var(--ds-text-bright)" }}>DeckStudio v0.4.10</h1>
                     <p style={{ fontSize: 13.5, color: "var(--ds-text-muted)", marginTop: 4 }}>
                       Alternativa nativa, leve e 100% gratuita ao software oficial de Stream Docks compatíveis — sem WebView residente e com zero perda de pacotes em rede.
                     </p>
@@ -2299,7 +2321,7 @@ export default function App() {
               <Card title="Atualizações do Aplicativo (Auto-Updater)">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <div style={{ fontSize: 12.5, color: "var(--ds-text-secondary)" }}>
-                    Versão instalada: <code>v{updateInfo?.current_version ?? "0.4.9"}</code>
+                    Versão instalada: <code>v{updateInfo?.current_version ?? "0.4.10"}</code>
                     {updateInfo?.latest_version && (
                       <> · Última verificada: <code>v{updateInfo.latest_version}</code></>
                     )}

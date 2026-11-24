@@ -2,6 +2,12 @@
 
 Todas as mudanças notáveis do projeto são registradas aqui seguindo Semantic Versioning (`vX.Y.Z`).
 
+## [0.4.10] - 2026-11-24
+
+### Correções de UI (Seletor de Tema & Resize na Aba Fontes)
+- **Seletor de Tema no Topo ([App.tsx](deckstudio/apps/studio/src/App.tsx)):** `onChange` agora atualiza `cfg.active_theme` e `savedCfg` imediatamente ao trocar de tema e exibe os nomes amigáveis (`LLM Dashboard`, `Spark Clássico`, `Cyberpunk`, `Matrix`, `Obsidian Pro`).
+- **Layout Responsivo & Resize na Aba Fontes ([styles.css](deckstudio/apps/studio/src/styles.css), [App.tsx](deckstudio/apps/studio/src/App.tsx)):** corrigido esmagamento do título *"4. Windows Nativo + NVIDIA NVML"* com `flex-wrap` e `white-space: normal` em badges longas, `minmax(0, 1fr)` no `.grid-2` (empilhamento automático abaixo de `1120px`) e painel de sensores redimensionável (`resize: vertical`).
+
 ## [0.4.9] - 2026-11-24
 
 ### Botões & Logos sem Borda Externa (Fim do Recorte nas Lentes)
