@@ -2,6 +2,11 @@
 
 Todas as mudanças notáveis do projeto são registradas aqui seguindo Semantic Versioning (`vX.Y.Z`).
 
+## [0.4.9] - 2026-11-24
+
+### Botões & Logos sem Borda Externa (Fim do Recorte nas Lentes)
+- **Renderizador OLED ([render.rs](deckstudio/crates/deck-engine/src/render.rs)):** removidas as molduras/bordas externas e filetes de extremidade em `draw_themed_surface` e `draw_bevel_keycap`, eliminando o efeito de borda cortada nas lentes acrílicas dos botões, cards de sensores e logos (como OBS).
+
 ## [0.4.8] - 2026-11-24
 
 ### Previsão do Tempo por CEP

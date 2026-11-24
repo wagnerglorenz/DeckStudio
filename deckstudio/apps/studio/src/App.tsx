@@ -2277,7 +2277,7 @@ export default function App() {
                 <div className="about-hero">
                   <DeckLogo size={76} />
                   <div style={{ flex: 1 }}>
-                    <h1 style={{ fontSize: 22, fontWeight: 600, color: "var(--ds-text-bright)" }}>DeckStudio v0.4.8</h1>
+                    <h1 style={{ fontSize: 22, fontWeight: 600, color: "var(--ds-text-bright)" }}>DeckStudio v0.4.9</h1>
                     <p style={{ fontSize: 13.5, color: "var(--ds-text-muted)", marginTop: 4 }}>
                       Alternativa nativa, leve e 100% gratuita ao software oficial de Stream Docks compatíveis — sem WebView residente e com zero perda de pacotes em rede.
                     </p>
@@ -2299,7 +2299,7 @@ export default function App() {
               <Card title="Atualizações do Aplicativo (Auto-Updater)">
                 <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
                   <div style={{ fontSize: 12.5, color: "var(--ds-text-secondary)" }}>
-                    Versão instalada: <code>v{updateInfo?.current_version ?? "0.4.8"}</code>
+                    Versão instalada: <code>v{updateInfo?.current_version ?? "0.4.9"}</code>
                     {updateInfo?.latest_version && (
                       <> · Última verificada: <code>v{updateInfo.latest_version}</code></>
                     )}

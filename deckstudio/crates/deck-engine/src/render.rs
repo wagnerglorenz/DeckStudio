@@ -86,7 +86,7 @@ pub struct TileColorOverride<'a> {
     pub icon: Option<&'a str>,
 }
 
-fn draw_bevel_keycap(pm: &mut Pixmap, top_hex: &str, bot_hex: &str, hi_hex: &str, sh_hex: &str) {
+fn draw_bevel_keycap(pm: &mut Pixmap, top_hex: &str, bot_hex: &str, _hi_hex: &str, _sh_hex: &str) {
     let grad = LinearGradient::new(
         Point::from_xy(0.0, 0.0),
         Point::from_xy(0.0, CANVAS_SZ as f32),
@@ -109,114 +109,27 @@ fn draw_bevel_keycap(pm: &mut Pixmap, top_hex: &str, bot_hex: &str, hi_hex: &str
     } else {
         fill_solid(pm, bot_hex);
     }
-
-    // Brilho sutil de relevo no topo e sombra na base
-    let mut pb = PathBuilder::new();
-    pb.move_to(4.0 * SS, 1.5 * SS);
-    pb.line_to((TILE_SZ as f32 - 4.0) * SS, 1.5 * SS);
-    if let Some(path) = pb.finish() {
-        let stroke = Stroke { width: 2.0 * SS, ..Default::default() };
-        pm.stroke_path(&path, &paint_hex(hi_hex, 255), &stroke, Transform::identity(), None);
-    }
-    let mut pb2 = PathBuilder::new();
-    pb2.move_to(4.0 * SS, (TILE_SZ as f32 - 1.5) * SS);
-    pb2.line_to((TILE_SZ as f32 - 4.0) * SS, (TILE_SZ as f32 - 1.5) * SS);
-    if let Some(path) = pb2.finish() {
-        let stroke = Stroke { width: 2.0 * SS, ..Default::default() };
-        pm.stroke_path(&path, &paint_hex(sh_hex, 255), &stroke, Transform::identity(), None);
-    }
 }
 
-/// Superfície OLED de alto contraste (sem penumbra cinza) respeitando o tema ativo e a zona segura da lente acrílica.
+/// Superfície OLED de alto contraste (sem penumbra cinza e sem bordas externas recortadas pela lente).
 fn draw_themed_surface(
     pm: &mut Pixmap,
     theme: &ThemeConfig,
     bg_override: Option<&str>,
-    border_override: Option<&str>,
-    accent_override: Option<&str>,
+    _border_override: Option<&str>,
+    _accent_override: Option<&str>,
 ) {
     let bg = bg_override.unwrap_or(&theme.background);
-    let border = border_override.unwrap_or(&theme.card_border);
-    let accent = accent_override.unwrap_or(&theme.accent);
     fill_solid(pm, bg);
 
-    let m = 4.5 * SS;
-    let w = CANVAS_SZ as f32 - m * 2.0;
-    let h = CANVAS_SZ as f32 - m * 2.0;
-
-    match theme.surface_style.as_str() {
-        "cyber_hud" => {
-            // Cantos chanfrados estilo HUD Cyberpunk + barra superior elétrica
-            let tick = 14.0 * SS;
-            let mut pb = PathBuilder::new();
-            // Top-left
-            pb.move_to(m, m + tick);
-            pb.line_to(m, m);
-            pb.line_to(m + tick, m);
-            // Top-right (chanfro)
-            pb.move_to(m + w - tick, m);
-            pb.line_to(m + w - 5.0 * SS, m);
-            pb.line_to(m + w, m + 5.0 * SS);
-            pb.line_to(m + w, m + tick);
-            // Bottom-right
-            pb.move_to(m + w, m + h - tick);
-            pb.line_to(m + w, m + h);
-            pb.line_to(m + w - tick, m + h);
-            // Bottom-left
-            pb.move_to(m + tick, m + h);
-            pb.line_to(m, m + h);
-            pb.line_to(m, m + h - tick);
-            if let Some(p) = pb.finish() {
-                let stroke = Stroke { width: 2.2 * SS, line_cap: LineCap::Square, ..Default::default() };
-                pm.stroke_path(&p, &paint_hex(border, 255), &stroke, Transform::identity(), None);
+    if theme.surface_style == "matrix_tty" {
+        // Scanlines sutis de terminal sem moldura externa
+        let mut y = 6.0 * SS;
+        while y < CANVAS_SZ as f32 - 6.0 * SS {
+            if let Some(rect) = tiny_skia::Rect::from_xywh(0.0, y, CANVAS_SZ as f32, 1.0 * SS) {
+                pm.fill_rect(rect, &paint_hex("#042208", 160), Transform::identity(), None);
             }
-            if let Some(bar) = rounded_rect_path(m + 18.0 * SS, m - 1.0 * SS, w - 36.0 * SS, 2.5 * SS, 1.0 * SS) {
-                pm.fill_path(&bar, &paint_hex(accent, 255), FillRule::Winding, Transform::identity(), None);
-            }
-        }
-        "matrix_tty" => {
-            // Scanlines sutis de terminal + colchetes verdes
-            let mut y = 6.0 * SS;
-            while y < CANVAS_SZ as f32 - 6.0 * SS {
-                if let Some(rect) = tiny_skia::Rect::from_xywh(m, y, w, 1.0 * SS) {
-                    pm.fill_rect(rect, &paint_hex("#042208", 160), Transform::identity(), None);
-                }
-                y += 5.0 * SS;
-            }
-            if let Some(frame) = rounded_rect_path(m, m, w, h, 4.0 * SS) {
-                let stroke = Stroke { width: 1.5 * SS, ..Default::default() };
-                pm.stroke_path(&frame, &paint_hex(border, 210), &stroke, Transform::identity(), None);
-            }
-            // Pequenos colchetes no topo
-            for (x0, x1) in [(m + 2.0 * SS, m + 12.0 * SS), (m + w - 12.0 * SS, m + w - 2.0 * SS)] {
-                let mut pb = PathBuilder::new();
-                pb.move_to(x0, m);
-                pb.line_to(x1, m);
-                if let Some(p) = pb.finish() {
-                    let stroke = Stroke { width: 2.4 * SS, ..Default::default() };
-                    pm.stroke_path(&p, &paint_hex(accent, 255), &stroke, Transform::identity(), None);
-                }
-            }
-        }
-        "obsidian_gold" => {
-            // Moldura fina titânio sobre preto absoluto + filete superior ouro/acento
-            if let Some(frame) = rounded_rect_path(m, m, w, h, 8.0 * SS) {
-                let stroke = Stroke { width: 1.6 * SS, ..Default::default() };
-                pm.stroke_path(&frame, &paint_hex(border, 255), &stroke, Transform::identity(), None);
-            }
-            if let Some(bar) = rounded_rect_path(m + 20.0 * SS, m - 0.5 * SS, w - 40.0 * SS, 2.5 * SS, 1.2 * SS) {
-                pm.fill_path(&bar, &paint_hex(accent, 255), FillRule::Winding, Transform::identity(), None);
-            }
-        }
-        _ => {
-            // "oled_frame" / "sparkline" — moldura nítida sem véu/penumbra
-            if let Some(frame) = rounded_rect_path(m, m, w, h, 9.0 * SS) {
-                let stroke = Stroke { width: 1.8 * SS, ..Default::default() };
-                pm.stroke_path(&frame, &paint_hex(border, 255), &stroke, Transform::identity(), None);
-            }
-            if let Some(bar) = rounded_rect_path(m + 22.0 * SS, m, w - 44.0 * SS, 2.0 * SS, 1.0 * SS) {
-                pm.fill_path(&bar, &paint_hex(accent, 200), FillRule::Winding, Transform::identity(), None);
-            }
+            y += 5.0 * SS;
         }
     }
 }
