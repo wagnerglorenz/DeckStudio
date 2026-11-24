@@ -12,7 +12,6 @@ pub struct WeatherSnapshot {
     pub tmin: Option<f64>,
     pub tmax: Option<f64>,
     pub weather_code: i32,
-    pub city: String,
 }
 
 #[derive(Deserialize)]
@@ -57,7 +56,6 @@ pub fn spawn_weather_loop(
                             tmin,
                             tmax,
                             weather_code: parsed.current.weather_code,
-                            city: c.city.clone(),
                         };
                     }
                     on_log(format!(
@@ -66,7 +64,7 @@ pub fn spawn_weather_loop(
                     ));
                 }
             }
-            sleep(Duration::from_secs((c.refresh_minutes.max(1) * 60) as u64)).await;
+            sleep(Duration::from_secs(c.refresh_minutes.max(1) * 60)).await;
         }
     });
 }

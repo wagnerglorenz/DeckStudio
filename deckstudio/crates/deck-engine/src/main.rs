@@ -10,6 +10,7 @@ mod render;
 mod sensors;
 mod smart_profile;
 mod state;
+mod updater;
 mod weather;
 
 use chrono::{Local, Timelike};
@@ -18,9 +19,10 @@ use device::DeviceManager;
 use image::RgbImage;
 use obs::{ObsClient, ObsState};
 use render::{
-    decode_custom_image, group_accent, render_button_tile, render_clock_tile,
-    render_compact_health_tile, render_nav_circle_tile, render_obs_logo_tile,
-    render_obs_status_tile, render_sensor_tile, render_weather_tile,
+    decode_custom_image, group_accent, render_button_tile, render_button_tile_styled,
+    render_clock_tile, render_compact_health_tile, render_nav_circle_tile,
+    render_obs_logo_tile_themed, render_obs_status_tile, render_sensor_tile,
+    render_weather_tile, TileColorOverride,
 };
 use sensors::{format_rate_human, SensorHub};
 use smart_profile::ForegroundHook;
@@ -43,12 +45,25 @@ fn default_config_path() -> PathBuf {
     PathBuf::from(appdata).join("DeckStudio").join("config.json")
 }
 
+fn generate_and_persist_ipc_token(cfg_path: &std::path::Path) -> String {
+    use windows::Win32::Security::Cryptography::{BCryptGenRandom, BCRYPT_USE_SYSTEM_PREFERRED_RNG};
+    let mut raw = [0u8; 32];
+    let rc = unsafe { BCryptGenRandom(None, &mut raw, BCRYPT_USE_SYSTEM_PREFERRED_RNG) };
+    assert!(rc.is_ok(), "Falha crítica no CSPRNG (BCryptGenRandom): {rc:?}");
+    let token: String = raw.iter().map(|b| format!("{b:02x}")).collect();
+    if let Some(dir) = cfg_path.parent() {
+        let _ = std::fs::create_dir_all(dir);
+        let _ = std::fs::write(dir.join("ipc.token"), &token);
+    }
+    token
+}
+
 fn make_tray_icon() -> Icon {
     let mut rgba = Vec::with_capacity(32 * 32 * 4);
     for y in 0..32u32 {
         for x in 0..32u32 {
             // Squircle exterior (borda ciano -> verde)
-            let on_border = x < 3 || x >= 29 || y < 3 || y >= 29;
+            let on_border = !(3..29).contains(&x) || !(3..29).contains(&y);
             // 2 colunas x 3 linhas de mini teclas (esquerda/centro)
             let in_key = (6..=11).contains(&x) || (13..=18).contains(&x);
             let in_row = (6..=11).contains(&y) || (13..=18).contains(&y) || (20..=25).contains(&y);
@@ -71,11 +86,12 @@ fn make_tray_icon() -> Icon {
 fn launch_studio_editor() {
     let Ok(exe) = std::env::current_exe() else { return };
     if let Some(dir) = exe.parent() {
-        for candidate in [
-            dir.join("deck-studio.exe"),
-            dir.join("DeckStudio.exe"),
-            PathBuf::from(r"C:\Users\wagne\workspace\StreamDeck\deckstudio\apps\studio\src-tauri\target\release\deck-studio.exe"),
-        ] {
+        let mut candidates = vec![dir.join("deck-studio.exe"), dir.join("DeckStudio.exe")];
+        #[cfg(debug_assertions)]
+        candidates.push(PathBuf::from(
+            r"C:\Users\wagne\workspace\StreamDeck\deckstudio\apps\studio\src-tauri\target\release\deck-studio.exe",
+        ));
+        for candidate in candidates {
             if candidate.exists() {
                 let _ = Command::new(candidate).spawn();
                 return;
@@ -91,6 +107,8 @@ fn button_visual_state(tile: &TileConfig, obs: &ObsState, cfg_pages: &BTreeMap<S
     if is_obs && !obs.connected {
         return ("disabled".into(), "OFF".into(), title);
     }
+
+    // 1. Suporte legado a tile.state
     match tile.state.as_deref() {
         Some("record") => {
             if obs.recording && obs.paused {
@@ -132,9 +150,79 @@ fn button_visual_state(tile: &TileConfig, obs: &ObsState, cfg_pages: &BTreeMap<S
         _ => {}
     }
 
-    if let Some(ActionConfig::Obs { op, name: Some(sc_name), .. }) = &tile.action {
-        if op == "scene" && obs.current_scene == *sc_name {
-            return ("active".into(), "ATIVA".into(), title);
+    // 2. Avaliação dinâmica baseada na operação do OBS (ActionConfig::Obs)
+    if let Some(ActionConfig::Obs { op, name, input, scene, source, .. }) = &tile.action {
+        match op.as_str() {
+            "toggle_record" => {
+                if obs.recording && obs.paused {
+                    return ("warning".into(), "PAUSADO".into(), "GRAVANDO".into());
+                } else if obs.recording {
+                    return ("active".into(), "PARAR".into(), "GRAVANDO".into());
+                } else {
+                    return ("idle".into(), "CLIQUE".into(), if title.is_empty() { "Gravar".into() } else { title });
+                }
+            }
+            "toggle_record_pause" => {
+                if !obs.recording {
+                    return ("disabled".into(), "PARADO".into(), title);
+                } else if obs.paused {
+                    return ("warning".into(), "RETOMAR".into(), "PAUSADO".into());
+                } else {
+                    return ("idle".into(), "REC ATIVO".into(), title);
+                }
+            }
+            "toggle_stream" => {
+                return if obs.streaming {
+                    ("active".into(), "LIVE".into(), title)
+                } else {
+                    ("idle".into(), "OFF".into(), title)
+                };
+            }
+            "toggle_virtualcam" => {
+                return if obs.virtual_cam {
+                    ("active".into(), "CAM ON".into(), title)
+                } else {
+                    ("idle".into(), "OFF".into(), title)
+                };
+            }
+            "toggle_studio_mode" => {
+                return if obs.studio_mode {
+                    ("active".into(), "STUDIO".into(), title)
+                } else {
+                    ("idle".into(), "OFF".into(), title)
+                };
+            }
+            "toggle_mute" => {
+                let inp = input.as_deref().unwrap_or("Mic/Aux");
+                let muted = obs.muted.get(inp).copied().unwrap_or(false);
+                return if muted {
+                    ("active".into(), "MUDO".into(), title)
+                } else {
+                    ("idle".into(), "ATIVO".into(), title)
+                };
+            }
+            "scene" => {
+                if let Some(sc) = name {
+                    if sc.eq_ignore_ascii_case(&obs.current_scene) {
+                        return ("active".into(), "ATIVA".into(), title);
+                    }
+                }
+            }
+            "toggle_source" | "show_source" | "hide_source" => {
+                if let Some(src) = source {
+                    let target_scene = scene.as_deref().unwrap_or(&obs.current_scene);
+                    if let Some(items) = obs.scene_items.get(target_scene) {
+                        if let Some(item) = items.iter().find(|it| it.name.eq_ignore_ascii_case(src)) {
+                            return if item.enabled {
+                                ("active".into(), if sub.is_empty() { "VISÍVEL".into() } else { sub }, title)
+                            } else {
+                                ("idle".into(), if sub.is_empty() { "OCULTO".into() } else { sub }, title)
+                            };
+                        }
+                    }
+                }
+            }
+            _ => {}
         }
     }
     if tile.kind == "folder" && sub.is_empty() {
@@ -181,6 +269,10 @@ fn tile_base_hash(base_theme_sig: u64, grid_key: &str, tile: &TileConfig) -> u64
     tile.style.hash(&mut h);
     tile.is_temp.hash(&mut h);
     tile.state.hash(&mut h);
+    tile.bg_color.hash(&mut h);
+    tile.border_color.hash(&mut h);
+    tile.text_color.hash(&mut h);
+    tile.icon_color.hash(&mut h);
     h.finish()
 }
 
@@ -273,6 +365,12 @@ fn render_all_tiles(
                     w.weather_code.hash(&mut sig_h);
                     DynKind::Weather
                 }
+                Some("timer") => {
+                    let (mm_ss, running) = shared.snapshot_timer();
+                    mm_ss.hash(&mut sig_h);
+                    running.hash(&mut sig_h);
+                    DynKind::Timer(mm_ss, running)
+                }
                 Some("cpu_health") => {
                     let u = values.get("CPU_UTIL").copied();
                     let t = values.get("CPU_TEMP").copied();
@@ -332,7 +430,7 @@ fn render_all_tiles(
                 .unwrap_or_else(|| render_button_tile(&tile.title, &tile.subtitle, "idle", &theme, None)),
             Ok(DynKind::NavPrev) => render_nav_circle_tile("prev", &theme),
             Ok(DynKind::NavNext) => render_nav_circle_tile("next", &theme),
-            Ok(DynKind::ObsLogo) => render_obs_logo_tile(),
+            Ok(DynKind::ObsLogo) => render_obs_logo_tile_themed(&theme),
             Ok(DynKind::Clock(hm, dm)) => render_clock_tile(&hm, &dm, &theme),
             Ok(DynKind::ObsStatus(st, sc)) => render_obs_status_tile(st, &sc, &theme),
             Ok(DynKind::Weather) => render_weather_tile(w.temp_c, w.tmin, w.tmax, &cfg.weather.city, w.weather_code, &theme),
@@ -353,6 +451,13 @@ fn render_all_tiles(
                 &theme,
             ),
             Ok(DynKind::NetStrip(dl, ul)) => render_button_tile(&format!("↓{dl}"), &format!("↑{ul}"), "idle", &theme, None),
+            Ok(DynKind::Timer(mm_ss, running)) => render_button_tile(
+                &mm_ss,
+                if running { "RODANDO" } else { "PAUSADO" },
+                if running { "active" } else { "idle" },
+                &theme,
+                Some("stopwatch"),
+            ),
             Ok(DynKind::Sensor(val_txt, raw, hist)) => render_sensor_tile(
                 &tile.title,
                 &val_txt,
@@ -368,7 +473,13 @@ fn render_all_tiles(
                 tile.is_temp,
             ),
             Ok(DynKind::Button(st, sub, btn_title)) => {
-                render_button_tile(&btn_title, &sub, &st, &theme, tile.icon.as_deref())
+                let ov = TileColorOverride {
+                    bg: tile.bg_color.as_deref(),
+                    border: tile.border_color.as_deref(),
+                    text: tile.text_color.as_deref(),
+                    icon: tile.icon_color.as_deref(),
+                };
+                render_button_tile_styled(&btn_title, &sub, &st, &theme, tile.icon.as_deref(), Some(&ov))
             }
         };
 
@@ -388,6 +499,7 @@ enum DynKind {
     Clock(String, String),
     ObsStatus(&'static str, String),
     Weather,
+    Timer(String, bool),
     CpuHealth(Option<f64>, Option<f64>),
     GpuHealth(Option<f64>, Option<f64>),
     NetStrip(String, String),
@@ -396,6 +508,14 @@ enum DynKind {
 }
 
 fn main() {
+    #[cfg(windows)]
+    unsafe {
+        use windows::Win32::System::LibraryLoader::{
+            SetDefaultDllDirectories, LOAD_LIBRARY_SEARCH_DEFAULT_DIRS,
+        };
+        let _ = SetDefaultDllDirectories(LOAD_LIBRARY_SEARCH_DEFAULT_DIRS);
+    }
+
     let rt = tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .worker_threads(2)
@@ -403,16 +523,14 @@ fn main() {
         .expect("Tokio runtime");
 
     let cfg_path = default_config_path();
+    let ipc_token = generate_and_persist_ipc_token(&cfg_path);
     let cfg = load_or_create_config(&cfg_path).unwrap_or_default();
 
     let redraw_notify = Arc::new(Notify::new());
     let cfg_arc = Arc::new(RwLock::new(cfg.clone()));
     let w_cfg_arc = Arc::new(RwLock::new(cfg.weather.clone()));
     let obs_cfg_arc = Arc::new(RwLock::new(cfg.obs.clone()));
-    let w_snap = Arc::new(RwLock::new(WeatherSnapshot {
-        city: cfg.weather.city.clone(),
-        ..Default::default()
-    }));
+    let w_snap = Arc::new(RwLock::new(WeatherSnapshot::default()));
 
     let obs_notify = Arc::clone(&redraw_notify);
     let logs_buf: Mutex<VecDeque<String>> = Mutex::new(VecDeque::with_capacity(80));
@@ -476,6 +594,16 @@ fn main() {
         started_at: Instant::now(),
         redraw_notify: Arc::clone(&redraw_notify),
         should_exit: AtomicBool::new(false),
+        update_status: Arc::new(RwLock::new(deck_core::UpdateInstallStatus {
+            state: "idle".into(),
+            progress_pct: 0,
+            message: String::new(),
+        })),
+        press_times: Mutex::new(HashMap::new()),
+        timer_state: Mutex::new(state::TimerState::default()),
+        ipc_token,
+        update_in_flight: AtomicBool::new(false),
+        last_update_check: RwLock::new(None),
     });
 
     if let Ok(mut slot) = shared_slot.write() {
@@ -704,16 +832,14 @@ mod button_simulation_tests {
                     let _ = tx
                         .send(Message::Text(
                             json!({"op": 0, "d": {"obsWebSocketVersion": "5.3.0", "rpcVersion": 1}})
-                                .to_string()
-                                .into(),
+                                .to_string(),
                         ))
                         .await;
                     let Some(Ok(_)) = rx.next().await else { return };
                     let _ = tx
                         .send(Message::Text(
                             json!({"op": 2, "d": {"negotiatedRpcVersion": 1}})
-                                .to_string()
-                                .into(),
+                                .to_string(),
                         ))
                         .await;
 
@@ -811,9 +937,9 @@ mod button_simulation_tests {
                                 "responseData": resp_data
                             }
                         });
-                        let _ = tx.send(Message::Text(resp.to_string().into())).await;
+                        let _ = tx.send(Message::Text(resp.to_string())).await;
                         if let Some(ev) = event_opt {
-                            let _ = tx.send(Message::Text(ev.to_string().into())).await;
+                            let _ = tx.send(Message::Text(ev.to_string())).await;
                         }
                     }
                 });
@@ -1037,7 +1163,7 @@ mod button_simulation_tests {
         // Todas as 8 cenas OBS
         for (pos, gk, expected_scene) in [
             (4u8, "3,0", "AC-TrackTrainee"),
-            (1, "4,0", "logo canal"),
+            (1, "4,0", "Logo Canal"),
             (14, "0,1", "1. ACC - Pro Studio (16:9)"),
             (11, "1,1", "2. ACC - Jogo Puro + Cam Sobreposta (16:9)"),
             (8, "2,1", "3. ACC - Lateral Split (16:9)"),
@@ -1072,5 +1198,53 @@ mod button_simulation_tests {
         simulate_hid_click(6, true);
         assert!(wait_until(1000, || *current_page.read().unwrap() == "monitor"));
         println!("[SIM obs]     pos=06 (3,2) nav_prev -> voltou para monitor PASS");
+    }
+
+    #[test]
+    fn test_obs_source_dynamic_visual_state() {
+        use crate::obs::ObsSceneItem;
+        let mut obs = ObsState {
+            connected: true,
+            current_scene: "Live".into(),
+            ..Default::default()
+        };
+        obs.scene_items.insert(
+            "Live".into(),
+            vec![
+                ObsSceneItem { id: 1, name: "Webcam 4K".into(), enabled: true },
+                ObsSceneItem { id: 2, name: "Overlay Patrocinio".into(), enabled: false },
+            ],
+        );
+        let pages = BTreeMap::new();
+
+        let tile_webcam = TileConfig {
+            title: "Webcam".into(),
+            action: Some(ActionConfig::Obs {
+                op: "toggle_source".into(),
+                source: Some("Webcam 4K".into()),
+                scene: Some("Live".into()),
+                name: None,
+                input: None,
+            }),
+            ..Default::default()
+        };
+        let (state_cam, sub_cam, _) = button_visual_state(&tile_webcam, &obs, &pages);
+        assert_eq!(state_cam, "active");
+        assert_eq!(sub_cam, "VISÍVEL");
+
+        let tile_overlay = TileConfig {
+            title: "Overlay".into(),
+            action: Some(ActionConfig::Obs {
+                op: "toggle_source".into(),
+                source: Some("Overlay Patrocinio".into()),
+                scene: None, // Deve usar current_scene ("Live")
+                name: None,
+                input: None,
+            }),
+            ..Default::default()
+        };
+        let (state_ov, sub_ov, _) = button_visual_state(&tile_overlay, &obs, &pages);
+        assert_eq!(state_ov, "idle");
+        assert_eq!(sub_ov, "OCULTO");
     }
 }

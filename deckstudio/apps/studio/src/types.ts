@@ -15,7 +15,8 @@ export interface DeviceConfig {
 
 export interface ThemeConfig {
   name: string;
-  style: "llm_dash" | "ajazz" | string;
+  style: "llm_dash" | "ajazz" | "cyberpunk" | "matrix" | "obsidian_pro" | string;
+  surface_style?: string;
   background: string;
   card_bg: string;
   card_border: string;
@@ -24,6 +25,7 @@ export interface ThemeConfig {
   muted: string;
   active: string;
   accent: string;
+  glow_color?: string;
   temp_colors: boolean;
 }
 
@@ -83,14 +85,30 @@ export type ActionConfig =
   | { kind: "folder_back" }
   | { kind: "theme"; target: string }
   | { kind: "brightness"; value: number; relative: boolean }
-  | { kind: "obs"; op: string; name?: string | null; input?: string | null }
+  | {
+      kind: "obs";
+      op: string;
+      name?: string | null;
+      input?: string | null;
+      source?: string | null;
+      scene?: string | null;
+    }
   | { kind: "hotkey"; keys: string[] }
   | { kind: "run"; program: string; args: string[] }
   | { kind: "text"; content: string }
   | { kind: "media"; op: string }
   | { kind: "soundboard"; path: string }
   | { kind: "webhook"; url: string; method: string }
+  | { kind: "audio_app"; op: "vol_up" | "vol_down" | "mute" | string; process: string; step?: number }
+  | { kind: "timer"; op: "toggle" | "reset" | "pomodoro" | string; seconds: number }
   | { kind: "multi_action"; name: string; steps: ActionStep[] };
+
+export interface BackupCandidate {
+  path: string;
+  source: string;
+  modified_ts: number;
+  profiles_count: number;
+}
 
 export interface TileConfig {
   type: "sensor" | "button" | "folder" | string;
@@ -108,7 +126,12 @@ export interface TileConfig {
   style?: "ring" | "card" | string | null;
   is_temp: boolean;
   state?: string | null;
+  bg_color?: string | null;
+  border_color?: string | null;
+  text_color?: string | null;
+  icon_color?: string | null;
   action?: ActionConfig | null;
+  long_press_action?: ActionConfig | null;
 }
 
 export interface ProfileConfig {
@@ -128,6 +151,7 @@ export interface AppConfig {
   smart_profiles: SmartProfilesConfig;
   active_profile: string;
   profiles: Record<string, ProfileConfig>;
+  update_feed_url?: string;
 }
 
 export interface EngineHealth {
@@ -178,6 +202,7 @@ export interface ObsCatalog {
   current_scene: string;
   scenes: string[];
   audio_inputs: string[];
+  sources?: string[];
 }
 
 export interface GridPreviewResponse {
@@ -185,4 +210,28 @@ export interface GridPreviewResponse {
   page: string;
   folder_stack: string[];
   tiles_b64: Record<string, string>;
+}
+
+export interface AutostartStatus {
+  engine_enabled: boolean;
+  dash_enabled: boolean;
+  engine_path: string;
+  dash_path: string;
+}
+
+export interface UpdateCheckResponse {
+  current_version: string;
+  latest_version: string;
+  update_available: boolean;
+  release_notes: string;
+  download_url: string;
+  sha256?: string | null;
+  published_at: string;
+  error?: string | null;
+}
+
+export interface UpdateInstallStatus {
+  state: "idle" | "downloading" | "verifying" | "installing" | "error" | string;
+  progress_pct: number;
+  message: string;
 }

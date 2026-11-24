@@ -1,6 +1,5 @@
 //! Leitor nativo da memória compartilhada do AIDA64 (`AIDA64_SensorValues`).
 
-use std::collections::HashMap;
 use std::ffi::OsStr;
 use std::os::windows::ffi::OsStrExt;
 use std::process::Command;
@@ -54,8 +53,8 @@ impl Aida64Reader {
             }
         }
 
-        // Vigia de AIDA64 congelado (45s sem publicar, cooldown 90s)
-        if enable_watchdog && self.last_change.elapsed() >= Duration::from_secs(45) {
+        // Vigia de AIDA64 congelado (45s sem publicar após já ter estado ativo, cooldown 90s)
+        if enable_watchdog && self.last_ok.is_some() && self.last_change.elapsed() >= Duration::from_secs(45) {
             let can_restart = self
                 .last_restart
                 .map(|t| t.elapsed() >= Duration::from_secs(90))
@@ -64,11 +63,14 @@ impl Aida64Reader {
                 self.last_restart = Some(Instant::now());
                 self.last_change = Instant::now();
                 std::thread::spawn(|| {
+                    use std::os::windows::process::CommandExt as _;
+                    let root = std::env::var("SystemRoot").unwrap_or_else(|_| r"C:\Windows".into());
+                    let schtasks = std::path::PathBuf::from(root).join("System32").join("schtasks.exe");
                     for args in [
                         ["/End", "/TN", "AIDA64 AutoStart"],
                         ["/Run", "/TN", "AIDA64 AutoStart"],
                     ] {
-                        let _ = Command::new("schtasks").args(args).output();
+                        let _ = Command::new(&schtasks).creation_flags(0x0800_0000).args(args).output();
                         std::thread::sleep(Duration::from_secs(2));
                     }
                 });
@@ -117,11 +119,16 @@ pub fn read_aida_raw_shm() -> Option<String> {
             &mut mbi,
             std::mem::size_of::<MEMORY_BASIC_INFORMATION>(),
         );
-        let result = if queried > 0 && mbi.RegionSize > 0 {
-            let slice = std::slice::from_raw_parts(view.Value as *const u8, mbi.RegionSize);
-            let nul = slice.iter().position(|&b| b == 0).unwrap_or(slice.len());
+        let result = if queried > 0
+            && mbi.State == windows::Win32::System::Memory::MEM_COMMIT
+            && mbi.RegionSize > 0
+        {
+            let cap = mbi.RegionSize.min(1_048_576);
+            let mut buf = vec![0u8; cap];
+            std::ptr::copy_nonoverlapping(view.Value as *const u8, buf.as_mut_ptr(), cap);
+            let nul = buf.iter().position(|&b| b == 0).unwrap_or(buf.len());
             // Latin-1 decode (AIDA64 escreve em ANSI/Latin1)
-            Some(slice[..nul].iter().map(|&b| b as char).collect())
+            Some(buf[..nul].iter().map(|&b| b as char).collect())
         } else {
             None
         };
@@ -135,18 +142,29 @@ pub fn parse_aida_xml(raw: &str) -> Vec<AidaSensorItem> {
     let mut out = Vec::new();
     let mut pos = 0;
     let bytes = raw.as_bytes();
-    while pos < bytes.len() {
+    while pos < bytes.len() && out.len() < 2048 {
         let Some(rel_start) = raw[pos..].find('<') else { break };
         let tag_start = pos + rel_start;
         let Some(rel_end) = raw[tag_start + 1..].find('>') else { break };
         let kind = &raw[tag_start + 1..tag_start + 1 + rel_end];
-        if kind.is_empty() || kind.starts_with('/') || kind == "id" || kind == "label" || kind == "value" {
+        if kind.is_empty()
+            || kind.len() > 24
+            || kind.starts_with('/')
+            || kind.contains(|c: char| c.is_whitespace() || c == '<')
+            || kind == "id"
+            || kind == "label"
+            || kind == "value"
+        {
             pos = tag_start + 1 + rel_end + 1;
             continue;
         }
         let close_pat = format!("</{kind}>");
         let after_kind = tag_start + 1 + rel_end + 1;
-        let Some(rel_close) = raw[after_kind..].find(&close_pat) else {
+        let mut search_end = (after_kind + 512).min(raw.len());
+        while search_end > after_kind && !raw.is_char_boundary(search_end) {
+            search_end -= 1;
+        }
+        let Some(rel_close) = raw[after_kind..search_end].find(&close_pat) else {
             pos = after_kind;
             continue;
         };
@@ -157,12 +175,14 @@ pub fn parse_aida_xml(raw: &str) -> Vec<AidaSensorItem> {
             extract_tag(block, "value"),
         ) {
             if let Ok(value) = val_str.trim().replace(',', ".").parse::<f64>() {
-                out.push(AidaSensorItem {
-                    kind: kind.to_string(),
-                    id: id.to_string(),
-                    label: label.to_string(),
-                    value,
-                });
+                if value.is_finite() {
+                    out.push(AidaSensorItem {
+                        kind: kind.to_string(),
+                        id: id.to_string(),
+                        label: label.to_string(),
+                        value,
+                    });
+                }
             }
         }
         pos = after_kind + rel_close + close_pat.len();
@@ -201,10 +221,6 @@ pub fn aida_unit_hint(kind: &str, id: &str) -> &'static str {
         }
         _ => "",
     }
-}
-
-pub fn to_map(items: &[AidaSensorItem]) -> HashMap<String, f64> {
-    items.iter().map(|it| (it.id.clone(), it.value)).collect()
 }
 
 #[cfg(test)]

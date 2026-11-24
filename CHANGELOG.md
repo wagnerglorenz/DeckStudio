@@ -2,6 +2,82 @@
 
 Todas as mudanças notáveis do projeto são registradas aqui seguindo Semantic Versioning (`vX.Y.Z`).
 
+## [0.4.5] - 2026-11-24
+
+### Qualidade & Confiabilidade (Clippy + TypeScript Zero Warnings)
+- **Limpeza Completa de Código (`deck-core`, `deck-engine`):** removidos símbolos mortos (`CREATE_NO_WINDOW`, `OUTPUT_REQUEST_PREFIX`, `CMD_CLEAR_BUTTON`, `is_open`, `clear_button`, `ObsCmd::RefreshCatalog`, `render_obs_logo_tile`, `to_map`, `WeatherSnapshot.city`), eliminados `.into()` redundantes, `format!` desnecessário e casts redundantes.
+- **Idiomaticidade & Segurança de Divisão:** aplicados `sort_by_key`, `div_ceil`, `checked_div`, `is_multiple_of`, `!(3..29).contains(...)`, `&Path` e `next_back()`, zerando todos os avisos em `cargo clippy --workspace --all-targets -- -D warnings`, `deck-studio` (`src-tauri`) e `tsc --noEmit`.
+
+## [0.4.4] - 2026-11-24
+
+### Correções Finais Run-3 (Zero Pendências de Código)
+- **Prova Mútua `/api/ping` (`RUN3-001`):** `deck-engine` expõe `GET /api/ping?c=<nonce>` retornando `SHA-256(ipc_token:nonce)` em [ipc.rs](deckstudio/crates/deck-engine/src/ipc.rs) e `deck-studio` verifica a prova antes de enviar o Bearer token ([src-tauri/src/main.rs](deckstudio/apps/studio/src-tauri/src/main.rs)).
+- **SSRF DNS + IPv4 Não-Canônico (`SEC-R3-01`):** `actions.rs` normaliza URLs via `reqwest::Url`, bloqueia `0.0.0.0/8`, octal/encurtado e resolve DNS com `tokio::net::lookup_host` + `ClientBuilder::resolve`.
+- **`PUT /api/config`, `AIDA64` UTF-8, `OBS`, `UNC` & `sensor-doctor.ps1` (`SEC-R3-02`..`05`, `RUN3-002`):** `put_config` limpa `obs.password` se `obs.host`/`port`/`password_env` mudarem; `parse_aida_xml` alinha `search_end` à fronteira UTF-8; `obs.rs` bloqueia `\` e aplica timeout de 5s no `Hello`; `spawn_program` bloqueia UNC antes de `Command::new`; `sensor-doctor.ps1` usa `-MaximumRedirection 0`.
+
+## [0.4.3] - 2026-11-24
+
+### Defesa em Profundidade Final (Run-2 Completa)
+- **`SetDefaultDllDirectories` & Liveness Autenticada:** `deck-engine` ativa `LOAD_LIBRARY_SEARCH_DEFAULT_DIRS` no boot ([main.rs](deckstudio/crates/deck-engine/src/main.rs)) e `deck-studio` valida `GET /api/health` com o token Bearer em `is_engine_running()` ([src-tauri/src/main.rs](deckstudio/apps/studio/src-tauri/src/main.rs)).
+- **Updater Pinado ao Check do Servidor:** `POST /api/system/update/install` exige correspondência exata com o `last_update_check` armazenado em `EngineShared` ([ipc.rs](deckstudio/crates/deck-engine/src/ipc.rs)).
+- **OBS, Long Press, SensorHub & Diagnóstico:** validação de `obs.host` + timeout de 5s em `connect_async` ([obs.rs](deckstudio/crates/deck-engine/src/obs.rs)), limpeza de `press_times` em troca de perfil ([state.rs](deckstudio/crates/deck-engine/src/state.rs)), `Policy::none()` obrigatório no `SensorHub` ([sensors/mod.rs](deckstudio/crates/deck-engine/src/sensors/mod.rs)) e `XmlReader` com `DtdProcessing::Prohibit` + validação loopback em [sensor-doctor.ps1](scripts/sensor-doctor.ps1).
+
+## [0.4.2] - 2026-11-24
+
+### Hardening Run-2 (Correções de Borda & Defesa em Profundidade)
+- **LibreHWM & AIDA64 & Win32 (`librehwm.rs`, `aida64.rs`, `native_win.rs`):** corrigido pânico de fronteira UTF-8 (`chars().take(256)`), streaming com teto de 2 MiB (contra `Transfer-Encoding: chunked`), `!val.is_finite()`, limite `O(N)` no parser XML AIDA64, buffer `Vec<u32>` alinhado em `sample_net_octets` e `nvmlShutdown()` em falha parcial.
+- **Webhook SSRF, UNC & Hotkeys (`actions.rs`, `ipc.rs`):** bloqueio de `@` (userinfo), `?`/`#`/`\`, IPv4 octal/hex/decimal/CGNAT e IPv6 privado/mapeado em `is_safe_webhook_url`, redação de URLs em `reqwest::Error`, validação pré-`canonicalize` em `/api/backup/restore` e bloqueio de `\\?\UNC\`.
+- **Token, Updater, NSIS & WebView2 (`main.rs`, `updater.rs`, `nsis-hooks.nsh`, `tauri.conf.json`, `api.ts`, `App.tsx`):** checagem estrita de `Host` e retorno de `BCryptGenRandom`, limpeza de `obs.password` ao alterar `obs.host`/`port` na importação, bloqueio de `..`/`%2e`/`@` no updater, `"$SYSDIR\taskkill.exe"` no NSIS, `form-action 'none'` no CSP, retry automático em `401` e limite de 512 KiB em upload PNG.
+
+## [0.4.1] - 2026-11-23
+
+### Hardening Completo de Segurança (`/security-audit`)
+- **IPC Autenticado + CORS Restrito (`SEC-001`, `SEC-010`):** token Bearer CSPRNG por sessão (`BCryptGenRandom`) gravado em `%APPDATA%\DeckStudio\ipc.token`, middleware Axum de autenticação em tempo constante e validação de `Host` em [ipc.rs](deckstudio/crates/deck-engine/src/ipc.rs); CORS restrito às origens Tauri; comando `get_ipc_token` no host Tauri ([main.rs](deckstudio/apps/studio/src-tauri/src/main.rs)) e envio automático em [api.ts](deckstudio/apps/studio/src/api.ts).
+- **Auto-Updater Endurecido (`SEC-002`, `SEC-009`, `SEC-012`):** pinagem de domínios HTTPS oficiais + Redirect Policy customizada, SHA-256 obrigatório (fail-closed), staging exclusivo com `create_new(true)` em `%LOCALAPPDATA%\DeckStudio\updates`, re-validação pós-gravação contra TOCTOU, trava single-flight (`409 Conflict`), execução desanexada (`DETACHED_PROCESS | CREATE_BREAKAWAY_FROM_JOB`) e remoção de `/T` no `taskkill` em [nsis-hooks.nsh](deckstudio/apps/studio/src-tauri/nsis-hooks.nsh).
+- **Confinamento de Caminhos & Proteção de Segredos (`SEC-003`, `SEC-006`, `SEC-013`):** bloqueio de caminhos UNC/dispositivo e allowlist de backups em `/api/backup/restore` e `/api/import/ajazz`; redação de `obs.password` nas respostas IPC e nos backups em `Documentos`; auto-restore silencioso restrito a `AppData`.
+- **Ações & Sensores (`SEC-004`, `SEC-005`, `SEC-007`, `SEC-008`, `SEC-012`, `SEC-013`):** abertura de URLs/atalhos via Win32 `ShellExecuteW` (removido `cmd /C start`), filtro anti-SSRF e timeout em Webhooks, `Shell=False` no Python legado, carregamento explícito em `System32` para `nvml.dll`/`winmm.dll`/`schtasks.exe`/`reg.exe`/`powershell.exe`, cópia segura de memória compartilhada (AIDA64/HWiNFO) com `is_finite()`, limites de tamanho/profundidade no LibreHWM, CSP restritiva em [tauri.conf.json](deckstudio/apps/studio/src-tauri/tauri.conf.json), sanitização de `custom_image_b64` e sincronização de `src-tauri/Cargo.toml` em [release.ps1](scripts/release.ps1).
+
+## [0.4.0] - 2026-11-23
+
+### Fase 2: Long Press, Mixer WASAPI, Cronômetro/Pomodoro & Backup/Auto-Restauração
+- **Backup Automático & Auto-Restauração na Reinstalação:** [config.rs](deckstudio/crates/deck-core/src/config.rs) grava backups redundantes em `%APPDATA%\DeckStudio\backups\config-latest.json` e `%USERPROFILE%\Documents\DeckStudio\backups\config-latest.json` a cada salvamento, e restaura automaticamente de instalações anteriores (`AppData`, `LocalAppData`, `Documentos`, pasta portátil) quando `config.json` não existe.
+- **Exportar / Importar & Restaurar na UI:** novos endpoints `/api/backup/export`, `/api/backup/import`, `/api/backup/sources` e `/api/backup/restore` em [ipc.rs](deckstudio/crates/deck-engine/src/ipc.rs) integrados à aba **Perfis** em [App.tsx](deckstudio/apps/studio/src/App.tsx).
+- **Segurar Tecla (Long Press >= 500ms):** suporte a `long_press_action` em [state.rs](deckstudio/crates/deck-engine/src/state.rs) permitindo duas ações na mesma tecla (clique curto vs. segurar).
+- **Mixer de Áudio por App (WASAPI Nativo):** nova ação `AudioApp` em [actions.rs](deckstudio/crates/deck-engine/src/actions.rs) para mutar ou ajustar volume de processos individuais (`spotify.exe`, `discord.exe`) ou Master do Windows.
+- **Cronômetro / Pomodoro:** widget dinâmico `timer` + ação `Timer` (`toggle`, `pomodoro`, `reset`) em [main.rs](deckstudio/crates/deck-engine/src/main.rs) e [state.rs](deckstudio/crates/deck-engine/src/state.rs).
+
+## [0.3.1] - 2026-11-23
+
+### Qualidade Visual dos Botões (Fim da Penumbra), 3 Novos Temas & Key Creator
+- **Eliminação da "Penumbra" nas Teclas Físicas:** substituído o gradiente cinza-azulado lavado (`draw_bevel_keycap`) por superfícies OLED de alto contraste (`draw_themed_surface` em [render.rs](deckstudio/crates/deck-engine/src/render.rs)), molduras nítidas na zona segura da lente acrílica, drop-shadow sutil nos textos e qualidade JPEG inicial `95` em [hid_proto.rs](deckstudio/crates/deck-engine/src/hid_proto.rs) (`<= 10 KiB`).
+- **3 Novos Temas Nativos:** adicionados `cyberpunk` (*Night City* — HUD chanfrado amarelo/ciano), `matrix` (*Terminal TTY* — scanlines sutis + verde fósforo) e `obsidian_pro` (*Obsidian Studio Pro* — preto OLED + ouro quente) em [config.rs](deckstudio/crates/deck-core/src/config.rs), com merge automático em `config.json` existente e preview ao vivo na aba **Temas** ([App.tsx](deckstudio/apps/studio/src/App.tsx)).
+- **Biblioteca Expandida (45+ Ícones & Logos):** adicionados ícones vetoriais para `cursor`, `docker`, `git`, `powershell`, `notion`, `slack`, `teams`, `zoom`, `epic`, `battlenet`, `firefox`, `brave`, `photoshop`, `premiere`, `davinci`, `blender`, `vlc`, `cpu`, `gpu`, `ram`, `fan`, `volume_up`, `volume_down`, `mute_all`, `audio_switch`, `lock_pc`, `screenshot`, `clipboard`, `stopwatch`, `web` e `lightbulb` em [render.rs](deckstudio/crates/deck-engine/src/render.rs) e [AppIcons.tsx](deckstudio/apps/studio/src/design-system/AppIcons.tsx).
+- **Mini Key Creator & Copiar/Colar Tecla:** adicionados seletores de cor customizados por tecla (`bg_color`, `border_color`, `text_color`, `icon_color`) e botões **Copiar / Colar** no Editor ([App.tsx](deckstudio/apps/studio/src/App.tsx)).
+
+## [0.3.0] - 2026-11-23
+
+### Instalador Windows, Auto-Boot & Abertura Direta
+- **Instalador Windows NSIS (`DeckStudio_0.3.0_x64-setup.exe`):** configurado empacotamento completo em [tauri.conf.json](deckstudio/apps/studio/src-tauri/tauri.conf.json) incluindo `deck-engine.exe`, `scripts/sensor-doctor.ps1`, atalhos no Menu Iniciar/Área de Trabalho e hooks em [nsis-hooks.nsh](deckstudio/apps/studio/src-tauri/nsis-hooks.nsh) para registrar o motor no boot e limpar processos/registro na desinstalação.
+- **Ícone Único Inteligente:** ao abrir o `DeckStudio.exe`, [main.rs (Tauri)](deckstudio/apps/studio/src-tauri/src/main.rs) verifica a porta `127.0.0.1:19876` e inicia automaticamente o `deck-engine.exe` em segundo plano caso ainda não esteja em execução.
+- **Controle de Boot do Windows na Dash:** adicionados endpoints `/api/system/autostart` em [ipc.rs](deckstudio/crates/deck-engine/src/ipc.rs) e checkboxes na aba **Saúde** para ativar/desativar a inicialização no boot do motor (bandeja + LCD) e da janela do editor (Dash).
+
+### Sensores, Taxa de Atualização & Contraste Visual
+- **Script `sensor-doctor.ps1` + Guia Detalhado AIDA64:** criado [sensor-doctor.ps1](scripts/sensor-doctor.ps1) para diagnosticar ao vivo AIDA64 Shared Memory (`AIDA64_SensorValues`), LibreHardwareMonitor, HWiNFO64 e NVIDIA NVML, acionável direto pelo botão **"🩺 Rodar Script Sensor Doctor"** na aba **Fontes**; guia do AIDA64 ampliado em [sensors/mod.rs](deckstudio/crates/deck-engine/src/sensors/mod.rs).
+- **Seletor de Atualização do Display:** adicionado seletor na aba **Saúde** (`250 ms`, `500 ms`, `1000 ms`, `2000 ms`) ligado a `device.refresh_ms`.
+- **Botões Menos Opacos:** ajustadas as cores de fundo, bordas e texto do estado padrão (`idle`) e `disabled` no renderizador do LCD ([render.rs](deckstudio/crates/deck-engine/src/render.rs)) e tokens visuais da Dash ([tokens.css](deckstudio/apps/studio/src/design-system/tokens.css), [styles.css](deckstudio/apps/studio/src/styles.css)).
+
+## [0.2.1] - 2026-11-19
+
+### Desenvolvimento Colaborativo com IA Local & Integração OBS Avançada
+- **Orquestração Antigravity (Planejador) + Qwen-2.5-Coder (Desenvolvedor):** integração de pipeline através do proxy Ollama na porta `11888` (com medição de tokens para dashboard de consumo), gerando código Rust e TypeScript de alto desempenho a **117–123 tokens/segundo** na GPU local.
+- **Feedback Visual Dinâmico em Tempo Real no LCD:**
+  - O motor Rust ([main.rs](deckstudio/crates/deck-engine/src/main.rs)) atualizou a função `button_visual_state` para avaliar dinamicamente operações OBS (`toggle_source`, `show_source`, `hide_source`, `toggle_record`, `toggle_stream`, `toggle_virtualcam`, `toggle_studio_mode`, `toggle_mute`, `scene`).
+  - Botões físicos agora refletem em tempo real no LCD (800x480) o estado das fontes (`VISÍVEL` / `active` com destaque de borda, ou `OCULTO` / `idle`), mutação de microfone (`MUDO` / `ATIVO`) e cenas ativas.
+  - Adicionado novo teste unitário de regressão `test_obs_source_dynamic_visual_state` (19/19 testes aprovados no workspace).
+- **Inspetor Visual de Fontes OBS no DeckStudio (`ObsSourcesInspector.tsx`):**
+  - Desenvolvido novo componente no Design System ([ObsSourcesInspector.tsx](deckstudio/apps/studio/src/design-system/ObsSourcesInspector.tsx)) com filtro de busca em tempo real, badges temáticos categorizados por heurística (📷 `CAM`, 🔊 `ÁUDIO`, 🖥️ `TELA`, 🖼️ `IMAGEM`, 📦 `FONTE`) e vinculação direta da fonte à tecla selecionada com 1-clique.
+  - Integrado no editor de ações do Studio ([App.tsx](deckstudio/apps/studio/src/App.tsx)).
+
 ## [0.2.0] - 2026-11-19
 
 ### Marca, Design System & Experiência do Usuário

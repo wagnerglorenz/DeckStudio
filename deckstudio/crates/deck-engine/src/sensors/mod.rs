@@ -36,7 +36,10 @@ impl SensorHub {
         Self {
             aida: Aida64Reader::new(),
             native: NativeMonitor::new(),
-            http: reqwest::Client::new(),
+            http: reqwest::Client::builder()
+                .redirect(reqwest::redirect::Policy::none())
+                .build()
+                .expect("Falha ao inicializar cliente HTTP SensorHub"),
             last_libre: Vec::new(),
             last_libre_err: None,
             next_libre_probe: None,
@@ -260,8 +263,9 @@ impl SensorHub {
                 setup_guide: vec![
                     "Abra o AIDA64 Extreme/Engineer.".into(),
                     "Vá em Arquivo -> Preferências -> Aplicativos Externos.".into(),
-                    "Marque 'Ativar memória compartilhada' (AIDA64_SensorValues) e clique OK.".into(),
-                    "Opcional: ative a Vigia Automática para reiniciar a tarefa AIDA64 AutoStart se congelar por 45s.".into(),
+                    "Marque 'Ativar memória compartilhada' (AIDA64_SensorValues).".into(),
+                    "Na lista de itens abaixo, marque CPU (Uso/Temp/Watt), GPU (Uso/Temp/Watt/Fan), Memória e RTSS FPS.".into(),
+                    "Clique em Aplicar e OK (os sensores aparecem na hora ao lado sem reiniciar).".into(),
                 ],
                 endpoint: Some("Memória Compartilhada: AIDA64_SensorValues".into()),
             },
@@ -309,7 +313,7 @@ impl SensorHub {
                 } else if !need_nvml {
                     format!("Ativo (Win32 CPU/RAM/Rede: {}; NVML em standby — GPU via fonte prioritária)", nat.nic_name)
                 } else {
-                    format!("Ativo (Win32 CPU/RAM/Rede; sem NVML)")
+                    "Ativo (Win32 CPU/RAM/Rede; sem NVML)".into()
                 },
                 setup_guide: vec![
                     "Não precisa instalar nenhum aplicativo externo!".into(),
@@ -347,6 +351,7 @@ impl SensorHub {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn push_reading(
     readings: &mut Vec<SensorReading>,
     src_map: &mut HashMap<String, f64>,

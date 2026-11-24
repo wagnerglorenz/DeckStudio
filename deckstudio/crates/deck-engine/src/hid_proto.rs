@@ -16,13 +16,11 @@ pub const BUTTON_IMAGE_MAX_SIZE: usize = 1024 * 10; // 10 KiB
 pub const DEFAULT_TILE_SIZE: u32 = 96;
 
 pub const INPUT_REQUEST_PREFIX: [u8; 9] = [0x41, 0x43, 0x4B, 0x00, 0x00, 0x4F, 0x4B, 0x00, 0x00];
-pub const OUTPUT_REQUEST_PREFIX: [u8; 5] = [0x43, 0x52, 0x54, 0x00, 0x00];
 
 const CMD_INIT: [u8; 8] = [0x43, 0x52, 0x54, 0x00, 0x00, 0x44, 0x49, 0x53];
 const CMD_KEEPALIVE: [u8; 12] = [0x43, 0x52, 0x54, 0x00, 0x00, 0x43, 0x4F, 0x4E, 0x4E, 0x45, 0x43, 0x54];
 const CMD_FLUSH_BUFFER: [u8; 8] = [0x43, 0x52, 0x54, 0x00, 0x00, 0x53, 0x54, 0x50];
 const CMD_BACKLIGHT: [u8; 11] = [0x43, 0x52, 0x54, 0x00, 0x00, 0x4C, 0x49, 0x47, 0x00, 0x00, 0x32];
-const CMD_CLEAR_BUTTON: [u8; 12] = [0x43, 0x52, 0x54, 0x00, 0x00, 0x43, 0x4C, 0x45, 0x00, 0x00, 0x00, 0x00];
 const CMD_CLEAR_ALL: [u8; 12] = [0x43, 0x52, 0x54, 0x00, 0x00, 0x43, 0x4C, 0x45, 0x00, 0x00, 0x00, 0xFF];
 const CMD_IMG_ANNOUNCE: [u8; 13] = [0x43, 0x52, 0x54, 0x00, 0x00, 0x42, 0x41, 0x54, 0x00, 0x00, 0x00, 0x00, 0x00];
 
@@ -52,10 +50,8 @@ pub fn find_official_app_processes() -> Vec<String> {
             loop {
                 let len = entry.szExeFile.iter().position(|&c| c == 0).unwrap_or(entry.szExeFile.len());
                 let name = String::from_utf16_lossy(&entry.szExeFile[..len]);
-                if name.eq_ignore_ascii_case("Stream Dock AJAZZ.exe") {
-                    if !found.contains(&name) {
-                        found.push(name);
-                    }
+                if name.eq_ignore_ascii_case("Stream Dock AJAZZ.exe") && !found.contains(&name) {
+                    found.push(name);
                 }
                 if Process32NextW(snap, &mut entry).is_err() {
                     break;
@@ -73,7 +69,7 @@ pub fn find_official_app_processes() -> Vec<String> {
 /// - RGB puro, sem blocos EXIF/ICC
 /// - tamanho <= 10 KiB
 pub fn sanitize_jpeg(img: &RgbImage, size: u32, rotate_ccw_90: bool) -> Result<Vec<u8>, String> {
-    if size == 0 || size > 96 || size % 16 != 0 {
+    if size == 0 || size > 96 || !size.is_multiple_of(16) {
         return Err(format!("size inválido: {size} (deve ser múltiplo de 16 entre 16 e 96)"));
     }
 
@@ -86,7 +82,7 @@ pub fn sanitize_jpeg(img: &RgbImage, size: u32, rotate_ccw_90: bool) -> Result<V
     let rotated = if rotate_ccw_90 { resized.rotate270() } else { resized };
     let clean_rgb = rotated.to_rgb8();
 
-    for quality in [90u8, 82, 74, 65, 55, 45, 35, 25, 15, 10, 5] {
+    for quality in [95u8, 90, 82, 74, 65, 55, 45, 35, 25, 15, 10, 5] {
         let mut buf = Vec::with_capacity(6144);
         let mut enc = JpegEncoder::new_with_quality(&mut buf, quality);
         enc.encode_image(&clean_rgb)
@@ -137,10 +133,6 @@ impl Akp153eProto {
             dev: None,
             pressed_v2: HashSet::new(),
         }
-    }
-
-    pub fn is_open(&self) -> bool {
-        self.dev.is_some()
     }
 
     pub fn open(&mut self) -> Result<(), String> {
@@ -195,13 +187,6 @@ impl Akp153eProto {
 
     pub fn clear_all(&self) -> Result<(), String> {
         self.write_raw(&CMD_CLEAR_ALL)?;
-        self.write_raw(&CMD_FLUSH_BUFFER)
-    }
-
-    pub fn clear_button(&self, position: u8) -> Result<(), String> {
-        let mut pkt = CMD_CLEAR_BUTTON;
-        pkt[11] = position;
-        self.write_raw(&pkt)?;
         self.write_raw(&CMD_FLUSH_BUFFER)
     }
 

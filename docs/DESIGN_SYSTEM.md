@@ -5,6 +5,7 @@ Para facilitar evoluções rápidas sem regressões visuais nem CSS duplicado, a
 ## 1. Estrutura de Arquivos
 - [tokens.css](../deckstudio/apps/studio/src/design-system/tokens.css) — tokens CSS (`:root`) para fundos, superfícies elevadas, bordas, tipografia, marca, estados semânticos, glows, espaçamentos e raios.
 - [components.tsx](../deckstudio/apps/studio/src/design-system/components.tsx) — primitivos React tipados (`DeckLogo`, `Button`, `StatusPill`, `Card`, `KpiCard`, `Field`).
+- [AppIcons.tsx](../deckstudio/apps/studio/src/design-system/AppIcons.tsx) — catálogo vetorial de logos de apps populares (`AppLogoIcon`, `ICON_CATALOG`: OBS Studio, Discord, Spotify, Chrome, Edge, VS Code, Steam, Twitch, YouTube, NVIDIA, Terminal, Pastas e ícones de mídia/OBS).
 - [index.ts](../deckstudio/apps/studio/src/design-system/index.ts) — ponto único de exportação e importação automática de `tokens.css`.
 - [styles.css](../deckstudio/apps/studio/src/styles.css) — folhas de layout e composição consumindo exclusivamente variáveis `--ds-*`.
 

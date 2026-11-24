@@ -5,7 +5,7 @@
   "status": "pass",
   "type": "workflow",
   "quality": "showcase",
-  "startedAt": "2026-11-19T15:17:30.543Z",
+  "startedAt": "2026-11-24T00:11:34.988Z",
   "specification": {
     "path": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\workflow\\candidate.json",
     "sha256": "2960f5568da81deaaf0f488ecc6b6452d3fda92944fb28fd5cfe7ed3d2d255e8",
@@ -56,7 +56,7 @@
     "deliver": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 763,
+      "durationMs": 1052,
       "command": [
         "C:\\Program Files\\nodejs\\node.exe",
         "C:\\Users\\wagne\\.gemini\\config\\plugins\\archify\\skills\\archify\\bin\\archify.mjs",
@@ -72,7 +72,7 @@
       ],
       "receipt": {
         "schemaVersion": 1,
-        "receiptId": "121edc89-5f18-444f-ad17-96cac2c6a67a",
+        "receiptId": "d8a4b364-96cc-4f59-a7ca-33e0a6c86bd0",
         "ok": true,
         "command": "deliver",
         "type": "workflow",
@@ -144,7 +144,7 @@
     "check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 193,
+      "durationMs": 267,
       "command": [
         "C:\\Program Files\\nodejs\\node.exe",
         "C:\\Users\\wagne\\.gemini\\config\\plugins\\archify\\skills\\archify\\bin\\archify.mjs",
@@ -274,13 +274,13 @@
           "issues": []
         },
         "provenance": "current",
-        "deliveryReceiptId": "121edc89-5f18-444f-ad17-96cac2c6a67a"
+        "deliveryReceiptId": "d8a4b364-96cc-4f59-a7ca-33e0a6c86bd0"
       }
     },
     "browser-check": {
       "status": "pass",
       "exitCode": 0,
-      "durationMs": 1302,
+      "durationMs": 2541,
       "command": [
         "C:\\Program Files\\nodejs\\node.exe",
         "C:\\Users\\wagne\\.gemini\\config\\plugins\\archify\\skills\\archify\\bin\\archify.mjs",
@@ -298,7 +298,7 @@
         "status": "pass",
         "visualReview": "not-requested",
         "provenance": "current",
-        "deliveryReceiptId": "121edc89-5f18-444f-ad17-96cac2c6a67a",
+        "deliveryReceiptId": "d8a4b364-96cc-4f59-a7ca-33e0a6c86bd0",
         "artifact": {
           "path": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\workflow\\deckstudio-workflow.html",
           "sha256": "3f311fc14e75e35db29f9da61a95ddbcc39de7afe69946b5786a702e46318c3d",
@@ -1637,16 +1637,19 @@
     "browserCheckReceipt": "C:\\Users\\wagne\\workspace\\StreamDeck\\docs\\archify\\workflow\\deckstudio-workflow.browser-check.json"
   },
   "visualReview": "not-requested",
-  "finishedAt": "2026-11-19T15:17:33.593Z",
-  "durationMs": 3049,
+  "finishedAt": "2026-11-24T00:11:39.995Z",
+  "durationMs": 5006,
   "update": {
-    "status": "current",
+    "status": "update_available",
     "installedVersion": "3.2.0",
-    "availableVersion": "3.2.0",
-    "releaseNotes": null,
-    "checkedAt": "2026-11-19T15:12:23.693Z",
+    "availableVersion": "3.3.0",
+    "releaseNotes": "https://github.com/tt-a1i/archify/releases/tag/v3.3.0",
+    "severity": "normal",
+    "summary": "Adds Code Analysis & Architecture Diagnosis, Story walkthroughs and 1080p video, PR walkthroughs, automatic architecture placement, and lighter installs.",
+    "checkedAt": "2026-11-23T23:59:54.126Z",
     "source": "cache",
-    "noticeRequired": false,
-    "noticeText": null
+    "noticeRequired": true,
+    "noticeText": "Archify update: 3.2.0 → 3.3.0. A previous check at 2026-11-23T23:59:54.126Z found a newer release. Release notes: https://github.com/tt-a1i/archify/releases/tag/v3.3.0. Would you like me to update Archify?",
+    "eventKey": "archify@sha256:00e4ff53267aee7dabf22ed333360cd3e380db20271a50264ae146ee25cf2538"
   }
 }

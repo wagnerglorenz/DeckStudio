@@ -9,11 +9,11 @@
   --ds-bg-elevated: #141F33;
   --ds-bg-input: #162032;
   --ds-bg-pill: #131C2E;
-  --ds-bg-btn: #1B2840;
-  --ds-bg-active: #16243D;
+  --ds-bg-btn: #223252;
+  --ds-bg-active: #1A2B49;
   --ds-bg-deck-top: #1E2430;
   --ds-bg-deck-bottom: #151922;
-  --ds-bg-slot: #0A0D12;
+  --ds-bg-slot: #0F1521;
   --ds-bg-strip: #030509;
   --ds-bg-code: #070B12;
 
@@ -21,9 +21,9 @@
   --ds-border-subtle: #1E293B;
   --ds-border-default: #23314A;
   --ds-border-strong: #2A3B58;
-  --ds-border-btn: #2E4266;
+  --ds-border-btn: #3B5482;
   --ds-border-deck: #2F394D;
-  --ds-border-slot: #28354D;
+  --ds-border-slot: #33486B;
 
   /* Texto */
   --ds-text-primary: #E2E8F0;

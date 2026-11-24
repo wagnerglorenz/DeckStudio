@@ -5,7 +5,9 @@ use crate::device::DeviceManager;
 use crate::obs::ObsClient;
 use crate::sensors::SensorHub;
 use crate::weather::WeatherSnapshot;
-use deck_core::{save_config, AppConfig, EngineHealth, ObsConfig, TileConfig, WeatherConfig};
+use deck_core::{
+    save_config, AppConfig, EngineHealth, ObsConfig, TileConfig, UpdateInstallStatus, WeatherConfig,
+};
 use image::RgbImage;
 use std::collections::{BTreeMap, HashMap, VecDeque};
 use std::path::PathBuf;
@@ -31,6 +33,25 @@ impl Default for NavState {
     }
 }
 
+#[derive(Debug, Clone)]
+pub struct TimerState {
+    pub running: bool,
+    pub remaining_secs: u64,
+    pub initial_secs: u64,
+    pub last_tick: Instant,
+}
+
+impl Default for TimerState {
+    fn default() -> Self {
+        Self {
+            running: false,
+            remaining_secs: 25 * 60,
+            initial_secs: 25 * 60,
+            last_tick: Instant::now(),
+        }
+    }
+}
+
 pub struct EngineShared {
     pub config_path: PathBuf,
     pub config: Arc<RwLock<AppConfig>>,
@@ -51,6 +72,12 @@ pub struct EngineShared {
     pub started_at: Instant,
     pub redraw_notify: Arc<Notify>,
     pub should_exit: AtomicBool,
+    pub update_status: Arc<RwLock<UpdateInstallStatus>>,
+    pub press_times: Mutex<HashMap<u8, Instant>>,
+    pub timer_state: Mutex<TimerState>,
+    pub ipc_token: String,
+    pub update_in_flight: AtomicBool,
+    pub last_update_check: RwLock<Option<deck_core::UpdateCheckResponse>>,
 }
 
 impl EngineShared {
@@ -80,9 +107,6 @@ impl EngineShared {
         grid_key: &str,
         act: crate::hid_proto::InputAction,
     ) -> Option<String> {
-        if act != crate::hid_proto::InputAction::Press {
-            return None;
-        }
         let tiles = self.current_tiles();
         let tile = tiles.get(grid_key)?;
         let label = if !tile.title.is_empty() {
@@ -92,8 +116,41 @@ impl EngineShared {
         } else {
             tile.kind.as_str()
         };
-        self.push_log(format!("[INPUT] Tecla {grid_key} (pos={pos}) -> {label}"));
-        if let Some(action) = tile.action.clone() {
+
+        let chosen_action = if tile.long_press_action.is_some() {
+            match act {
+                crate::hid_proto::InputAction::Press => {
+                    if let Ok(mut pt) = self.press_times.lock() {
+                        pt.insert(pos, Instant::now());
+                    }
+                    return Some(label.to_string());
+                }
+                crate::hid_proto::InputAction::Release => {
+                    let held_ms = self
+                        .press_times
+                        .lock()
+                        .ok()
+                        .and_then(|mut pt| pt.remove(&pos))
+                        .map(|t| t.elapsed().as_millis())
+                        .unwrap_or(0);
+                    if held_ms >= 500 {
+                        self.push_log(format!("[INPUT] Long Press {grid_key} ({held_ms}ms) -> {label}"));
+                        tile.long_press_action.clone()
+                    } else {
+                        self.push_log(format!("[INPUT] Clique {grid_key} -> {label}"));
+                        tile.action.clone()
+                    }
+                }
+            }
+        } else {
+            if act != crate::hid_proto::InputAction::Press {
+                return None;
+            }
+            self.push_log(format!("[INPUT] Tecla {grid_key} (pos={pos}) -> {label}"));
+            tile.action.clone()
+        };
+
+        if let Some(action) = chosen_action {
             let s_nav = Arc::clone(self);
             let s_log = Arc::clone(self);
             crate::actions::execute_action(
@@ -105,6 +162,25 @@ impl EngineShared {
             );
         }
         Some(label.to_string())
+    }
+
+    pub fn snapshot_timer(&self) -> (String, bool) {
+        let Ok(mut t) = self.timer_state.lock() else {
+            return ("25:00".into(), false);
+        };
+        if t.running {
+            let elapsed = t.last_tick.elapsed().as_secs();
+            if elapsed > 0 {
+                t.remaining_secs = t.remaining_secs.saturating_sub(elapsed);
+                t.last_tick = Instant::now();
+                if t.remaining_secs == 0 {
+                    t.running = false;
+                }
+            }
+        }
+        let mins = t.remaining_secs / 60;
+        let secs = t.remaining_secs % 60;
+        (format!("{mins:02}:{secs:02}"), t.running)
     }
 
     pub fn current_tiles(&self) -> BTreeMap<String, TileConfig> {
@@ -144,6 +220,9 @@ impl EngineShared {
             false
         };
         if changed {
+            if let Ok(mut pt) = self.press_times.lock() {
+                pt.clear();
+            }
             self.clear_render_cache();
             self.device.clear_all();
             self.notify_redraw();
@@ -199,6 +278,40 @@ impl EngineShared {
                 let cur = self.brightness.load(Ordering::Relaxed) as i16;
                 let next = if relative { cur + value } else { value }.clamp(0, 100) as u8;
                 self.set_brightness(next);
+            }
+            NavCmd::Timer { op, seconds } => {
+                if let Ok(mut t) = self.timer_state.lock() {
+                    match op.as_str() {
+                        "reset" => {
+                            let target = if seconds > 0 { seconds } else { t.initial_secs };
+                            t.initial_secs = target;
+                            t.remaining_secs = target;
+                            t.running = false;
+                            t.last_tick = Instant::now();
+                        }
+                        "pomodoro" => {
+                            let target = if seconds > 0 { seconds } else { 25 * 60 };
+                            t.initial_secs = target;
+                            t.remaining_secs = target;
+                            t.running = true;
+                            t.last_tick = Instant::now();
+                        }
+                        _ => {
+                            if t.running {
+                                let elapsed = t.last_tick.elapsed().as_secs();
+                                t.remaining_secs = t.remaining_secs.saturating_sub(elapsed);
+                                t.running = false;
+                            } else {
+                                if t.remaining_secs == 0 {
+                                    t.remaining_secs = if seconds > 0 { seconds } else { t.initial_secs };
+                                }
+                                t.running = true;
+                                t.last_tick = Instant::now();
+                            }
+                        }
+                    }
+                }
+                self.notify_redraw();
             }
         }
     }

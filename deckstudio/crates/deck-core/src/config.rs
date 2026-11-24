@@ -2,6 +2,10 @@ use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use std::path::Path;
 
+pub fn default_update_feed_url() -> String {
+    "https://api.github.com/repos/wagnerglorenz/DeckStudio/releases/latest".into()
+}
+
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(default)]
 pub struct AppConfig {
@@ -15,6 +19,8 @@ pub struct AppConfig {
     pub smart_profiles: SmartProfilesConfig,
     pub active_profile: String,
     pub profiles: BTreeMap<String, ProfileConfig>,
+    #[serde(default = "default_update_feed_url")]
+    pub update_feed_url: String,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -40,7 +46,8 @@ pub struct NightModeConfig {
 #[serde(default)]
 pub struct ThemeConfig {
     pub name: String,
-    pub style: String, // "llm_dash" | "ajazz"
+    pub style: String,         // "llm_dash" | "ajazz" | "cyberpunk" | "matrix" | "obsidian_pro"
+    pub surface_style: String, // "oled_frame" | "sparkline" | "cyber_hud" | "matrix_tty" | "obsidian_gold"
     pub background: String,
     pub card_bg: String,
     pub card_border: String,
@@ -49,6 +56,7 @@ pub struct ThemeConfig {
     pub muted: String,
     pub active: String,
     pub accent: String,
+    pub glow_color: String,
     pub temp_colors: bool,
 }
 
@@ -138,7 +146,13 @@ pub struct TileConfig {
     pub style: Option<String>, // "ring" | "card"
     pub is_temp: bool,
     pub state: Option<String>,
+    pub bg_color: Option<String>,
+    pub border_color: Option<String>,
+    pub text_color: Option<String>,
+    pub icon_color: Option<String>,
     pub action: Option<ActionConfig>,
+    #[serde(default)]
+    pub long_press_action: Option<ActionConfig>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -155,6 +169,10 @@ pub enum ActionConfig {
         name: Option<String>,
         #[serde(default)]
         input: Option<String>,
+        #[serde(default)]
+        source: Option<String>,
+        #[serde(default)]
+        scene: Option<String>,
     },
     Hotkey { keys: Vec<String> },
     Run { program: String, args: Vec<String> },
@@ -162,6 +180,18 @@ pub enum ActionConfig {
     Media { op: String },
     Soundboard { path: String },
     Webhook { url: String, method: String },
+    AudioApp {
+        op: String, // "vol_up" | "vol_down" | "mute"
+        #[serde(default)]
+        process: String, // ex: "spotify.exe", "discord.exe" ou "" para padrão
+        #[serde(default)]
+        step: Option<f32>,
+    },
+    Timer {
+        op: String, // "toggle" | "reset" | "pomodoro"
+        #[serde(default)]
+        seconds: u64,
+    },
     MultiAction {
         name: String,
         steps: Vec<ActionStep>,
@@ -203,14 +233,16 @@ impl Default for ThemeConfig {
         Self {
             name: "llm_dash".to_string(),
             style: "llm_dash".to_string(),
-            background: "#0D1117".to_string(),
-            card_bg: "#162032".to_string(),
-            card_border: "#24324A".to_string(),
+            surface_style: "oled_frame".to_string(),
+            background: "#04070E".to_string(),
+            card_bg: "#070C17".to_string(),
+            card_border: "#1E3A5F".to_string(),
             chart: "#22D3EE".to_string(),
             text: "#FFFFFF".to_string(),
             muted: "#94A3B8".to_string(),
             active: "#E11D48".to_string(),
             accent: "#22D3EE".to_string(),
+            glow_color: "#22D3EE".to_string(),
             temp_colors: true,
         }
     }
@@ -259,7 +291,7 @@ impl Default for SensorSourcesConfig {
                 "native_nvml".into(),
             ],
             aida64_enabled: true,
-            aida64_watchdog: true,
+            aida64_watchdog: false,
             librehwm_enabled: true,
             librehwm_url: "http://127.0.0.1:8085/data.json".into(),
             hwinfo_enabled: true,
@@ -323,6 +355,7 @@ impl Default for AppConfig {
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 fn sensor_tile(
     title: &str,
     id: &str,
@@ -382,14 +415,70 @@ pub fn default_themes() -> BTreeMap<String, ThemeConfig> {
         ThemeConfig {
             name: "ajazz".into(),
             style: "ajazz".into(),
-            background: "#12142D".into(),
-            card_bg: "#12142D".into(),
+            surface_style: "sparkline".into(),
+            background: "#090B1A".into(),
+            card_bg: "#090B1A".into(),
             card_border: "#272A4D".into(),
             chart: "#F700E7".into(),
             text: "#FFFFFF".into(),
             muted: "#94A3B8".into(),
             active: "#E11D48".into(),
             accent: "#38BDF8".into(),
+            glow_color: "#F700E7".into(),
+            temp_colors: true,
+        },
+    );
+    map.insert(
+        "cyberpunk".into(),
+        ThemeConfig {
+            name: "cyberpunk".into(),
+            style: "cyberpunk".into(),
+            surface_style: "cyber_hud".into(),
+            background: "#050508".into(),
+            card_bg: "#080810".into(),
+            card_border: "#FCEE0A".into(),
+            chart: "#00F0FF".into(),
+            text: "#FFFFFF".into(),
+            muted: "#00F0FF".into(),
+            active: "#FF003C".into(),
+            accent: "#FCEE0A".into(),
+            glow_color: "#FF003C".into(),
+            temp_colors: true,
+        },
+    );
+    map.insert(
+        "matrix".into(),
+        ThemeConfig {
+            name: "matrix".into(),
+            style: "matrix".into(),
+            surface_style: "matrix_tty".into(),
+            background: "#000300".into(),
+            card_bg: "#000800".into(),
+            card_border: "#00AA2B".into(),
+            chart: "#00FF41".into(),
+            text: "#E6FFE6".into(),
+            muted: "#22C55E".into(),
+            active: "#FF3333".into(),
+            accent: "#00FF41".into(),
+            glow_color: "#00FF41".into(),
+            temp_colors: true,
+        },
+    );
+    map.insert(
+        "obsidian_pro".into(),
+        ThemeConfig {
+            name: "obsidian_pro".into(),
+            style: "obsidian_pro".into(),
+            surface_style: "obsidian_gold".into(),
+            background: "#000000".into(),
+            card_bg: "#050507".into(),
+            card_border: "#3F3F46".into(),
+            chart: "#F59E0B".into(),
+            text: "#FFFFFF".into(),
+            muted: "#A1A1AA".into(),
+            active: "#EF4444".into(),
+            accent: "#F59E0B".into(),
+            glow_color: "#F59E0B".into(),
             temp_colors: true,
         },
     );
@@ -427,7 +516,7 @@ pub fn default_config() -> AppConfig {
             "CLIQUE",
             Some("record"),
             Some("record"),
-            ActionConfig::Obs { op: "toggle_record".into(), name: None, input: None },
+            ActionConfig::Obs { op: "toggle_record".into(), name: None, input: None, source: None, scene: None },
         ),
     );
     obs.insert(
@@ -437,7 +526,7 @@ pub fn default_config() -> AppConfig {
             "PARADO",
             Some("pause"),
             Some("record_pause"),
-            ActionConfig::Obs { op: "toggle_record_pause".into(), name: None, input: None },
+            ActionConfig::Obs { op: "toggle_record_pause".into(), name: None, input: None, source: None, scene: None },
         ),
     );
     obs.insert(
@@ -451,6 +540,8 @@ pub fn default_config() -> AppConfig {
                 op: "toggle_mute".into(),
                 name: None,
                 input: Some("Áudio do Jogo (A50 X Game)".into()),
+                source: None,
+                scene: None,
             },
         ),
     );
@@ -461,7 +552,7 @@ pub fn default_config() -> AppConfig {
             "TRAINEE",
             Some("track"),
             None,
-            ActionConfig::Obs { op: "scene".into(), name: Some("AC-TrackTrainee".into()), input: None },
+            ActionConfig::Obs { op: "scene".into(), name: Some("AC-TrackTrainee".into()), input: None, source: None, scene: None },
         ),
     );
     obs.insert(
@@ -471,7 +562,7 @@ pub fn default_config() -> AppConfig {
             "CANAL",
             Some("logo"),
             None,
-            ActionConfig::Obs { op: "scene".into(), name: Some("logo canal".into()), input: None },
+            ActionConfig::Obs { op: "scene".into(), name: Some("Logo Canal".into()), input: None, source: None, scene: None },
         ),
     );
     obs.insert("5,0".into(), widget_tile("clock", None));
@@ -483,7 +574,7 @@ pub fn default_config() -> AppConfig {
             "ACC",
             Some("studio"),
             None,
-            ActionConfig::Obs { op: "scene".into(), name: Some("1. ACC - Pro Studio (16:9)".into()), input: None },
+            ActionConfig::Obs { op: "scene".into(), name: Some("1. ACC - Pro Studio (16:9)".into()), input: None, source: None, scene: None },
         ),
     );
     obs.insert(
@@ -493,7 +584,7 @@ pub fn default_config() -> AppConfig {
             "CAM",
             Some("game_cam"),
             None,
-            ActionConfig::Obs { op: "scene".into(), name: Some("2. ACC - Jogo Puro + Cam Sobreposta (16:9)".into()), input: None },
+            ActionConfig::Obs { op: "scene".into(), name: Some("2. ACC - Jogo Puro + Cam Sobreposta (16:9)".into()), input: None, source: None, scene: None },
         ),
     );
     obs.insert(
@@ -503,7 +594,7 @@ pub fn default_config() -> AppConfig {
             "ACC",
             Some("split"),
             None,
-            ActionConfig::Obs { op: "scene".into(), name: Some("3. ACC - Lateral Split (16:9)".into()), input: None },
+            ActionConfig::Obs { op: "scene".into(), name: Some("3. ACC - Lateral Split (16:9)".into()), input: None, source: None, scene: None },
         ),
     );
     obs.insert(
@@ -513,7 +604,7 @@ pub fn default_config() -> AppConfig {
             "16:9",
             Some("focus"),
             None,
-            ActionConfig::Obs { op: "scene".into(), name: Some("4. Vídeos - Foco Total (Centro 16:9)".into()), input: None },
+            ActionConfig::Obs { op: "scene".into(), name: Some("4. Vídeos - Foco Total (Centro 16:9)".into()), input: None, source: None, scene: None },
         ),
     );
     obs.insert(
@@ -523,7 +614,7 @@ pub fn default_config() -> AppConfig {
             "MULTI",
             Some("multi"),
             None,
-            ActionConfig::Obs { op: "scene".into(), name: Some("5. Vídeos - Command Center (Multi-Screen)".into()), input: None },
+            ActionConfig::Obs { op: "scene".into(), name: Some("5. Vídeos - Command Center (Multi-Screen)".into()), input: None, source: None, scene: None },
         ),
     );
     obs.insert("5,1".into(), widget_tile("obs_status", None));
@@ -537,7 +628,7 @@ pub fn default_config() -> AppConfig {
             "CHEIA",
             Some("cam4k"),
             None,
-            ActionConfig::Obs { op: "scene".into(), name: Some("6. Câmera Tela Cheia (4K)".into()), input: None },
+            ActionConfig::Obs { op: "scene".into(), name: Some("6. Câmera Tela Cheia (4K)".into()), input: None, source: None, scene: None },
         ),
     );
     obs.insert("3,2".into(), widget_tile("nav_prev", Some(ActionConfig::Page { target: "monitor".into() })));
@@ -581,17 +672,121 @@ pub fn default_config() -> AppConfig {
         smart_profiles: SmartProfilesConfig::default(),
         active_profile: "default".into(),
         profiles,
+        update_feed_url: default_update_feed_url(),
     }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BackupCandidate {
+    pub path: String,
+    pub source: String,
+    pub modified_ts: u64,
+    pub profiles_count: usize,
+}
+
+fn backup_search_paths(primary_path: &Path) -> Vec<(String, std::path::PathBuf)> {
+    let mut out = Vec::new();
+    if let Some(parent) = primary_path.parent() {
+        out.push((
+            "Backup Local (AppData)".into(),
+            parent.join("backups").join("config-latest.json"),
+        ));
+    }
+    if let Ok(local) = std::env::var("LOCALAPPDATA") {
+        let p = std::path::PathBuf::from(local).join("DeckStudio").join("config.json");
+        if p != primary_path {
+            out.push(("Instalação Anterior (LocalAppData)".into(), p));
+        }
+    }
+    if let Ok(userprof) = std::env::var("USERPROFILE") {
+        out.push((
+            "Documentos (DeckStudio Backup)".into(),
+            std::path::PathBuf::from(userprof)
+                .join("Documents")
+                .join("DeckStudio")
+                .join("backups")
+                .join("config-latest.json"),
+        ));
+    }
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(dir) = exe.parent() {
+            let p1 = dir.join("config.json");
+            if p1 != primary_path {
+                out.push(("Pasta Portátil (config.json)".into(), p1));
+            }
+            out.push((
+                "Pasta Portátil (backups)".into(),
+                dir.join("backups").join("config-latest.json"),
+            ));
+        }
+    }
+    out
+}
+
+pub fn find_previous_backups(primary_path: &Path) -> Vec<BackupCandidate> {
+    let mut list = Vec::new();
+    for (source, p) in backup_search_paths(primary_path) {
+        if !p.exists() {
+            continue;
+        }
+        if let Ok(raw) = std::fs::read_to_string(&p) {
+            if let Ok(cfg) = serde_json::from_str::<AppConfig>(&raw) {
+                let modified_ts = std::fs::metadata(&p)
+                    .and_then(|m| m.modified())
+                    .ok()
+                    .and_then(|t| t.duration_since(std::time::UNIX_EPOCH).ok())
+                    .map(|d| d.as_secs())
+                    .unwrap_or(0);
+                list.push(BackupCandidate {
+                    path: p.display().to_string(),
+                    source,
+                    modified_ts,
+                    profiles_count: cfg.profiles.len(),
+                });
+            }
+        }
+    }
+    list.sort_by_key(|a| std::cmp::Reverse(a.modified_ts));
+    list
 }
 
 pub fn load_or_create_config(path: &Path) -> Result<AppConfig, String> {
     if !path.exists() {
+        // Auto-restaura silenciosamente apenas de backups privados em AppData/LocalAppData;
+        // Documentos e pasta portátil permanecem listados para restauração manual na UI.
+        let mut private_candidates = Vec::new();
+        if let Some(parent) = path.parent() {
+            private_candidates.push(parent.join("backups").join("config-latest.json"));
+        }
+        if let Ok(local) = std::env::var("LOCALAPPDATA") {
+            let p = std::path::PathBuf::from(local).join("DeckStudio").join("config.json");
+            if p != path {
+                private_candidates.push(p);
+            }
+        }
+        for cand in private_candidates {
+            if cand.exists() {
+                if let Ok(raw) = std::fs::read_to_string(&cand) {
+                    if let Ok(mut restored) = serde_json::from_str::<AppConfig>(&raw) {
+                        for (k, v) in default_themes() {
+                            restored.themes.entry(k).or_insert(v);
+                        }
+                        let _ = save_config(path, &restored);
+                        return Ok(restored);
+                    }
+                }
+            }
+        }
         let cfg = default_config();
         save_config(path, &cfg)?;
         return Ok(cfg);
     }
     let raw = std::fs::read_to_string(path).map_err(|e| format!("Falha ao ler config: {e}"))?;
-    serde_json::from_str(&raw).map_err(|e| format!("Config JSON inválido: {e}"))
+    let mut cfg: AppConfig = serde_json::from_str(&raw).map_err(|e| format!("Config JSON inválido: {e}"))?;
+    for (k, v) in default_themes() {
+        cfg.themes.entry(k).or_insert(v);
+    }
+    Ok(cfg)
 }
 
 pub fn save_config(path: &Path, cfg: &AppConfig) -> Result<(), String> {
@@ -599,7 +794,29 @@ pub fn save_config(path: &Path, cfg: &AppConfig) -> Result<(), String> {
         std::fs::create_dir_all(parent).map_err(|e| format!("Falha ao criar diretório config: {e}"))?;
     }
     let json = serde_json::to_string_pretty(cfg).map_err(|e| format!("Falha serializar config: {e}"))?;
-    std::fs::write(path, json).map_err(|e| format!("Falha gravar config: {e}"))
+    std::fs::write(path, &json).map_err(|e| format!("Falha gravar config: {e}"))?;
+
+    // Backup automático redundante (AppData/backups + Documentos/DeckStudio/backups)
+    if let Some(parent) = path.parent() {
+        let bdir = parent.join("backups");
+        if std::fs::create_dir_all(&bdir).is_ok() {
+            let _ = std::fs::write(bdir.join("config-latest.json"), &json);
+        }
+    }
+    if let Ok(userprof) = std::env::var("USERPROFILE") {
+        let doc_bdir = std::path::PathBuf::from(userprof)
+            .join("Documents")
+            .join("DeckStudio")
+            .join("backups");
+        if std::fs::create_dir_all(&doc_bdir).is_ok() {
+            let mut sanitized = cfg.clone();
+            sanitized.obs.password.clear();
+            if let Ok(doc_json) = serde_json::to_string_pretty(&sanitized) {
+                let _ = std::fs::write(doc_bdir.join("config-latest.json"), doc_json);
+            }
+        }
+    }
+    Ok(())
 }
 
 /// Importa um arquivo `manifest.json` do perfil do Stream Dock AJAZZ para um `ProfileConfig`.

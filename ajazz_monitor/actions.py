@@ -36,12 +36,26 @@ def send_hotkey(keys: list[str] | str) -> None:
         parts = [str(p).strip().lower() for p in keys]
     if not parts:
         return
+    resolved = []
+    for p in parts:
+        if p in _SPECIAL_KEYS:
+            resolved.append(_SPECIAL_KEYS[p])
+        elif len(p) == 1:
+            resolved.append(p)
+        else:
+            raise ValueError(f"Tecla inválida em hotkey: {p!r}")
     kb = KbController()
-    resolved = [_SPECIAL_KEYS.get(p, p) for p in parts]
-    for k in resolved:
-        kb.press(k)
-    for k in reversed(resolved):
-        kb.release(k)
+    pressed = []
+    try:
+        for k in resolved:
+            kb.press(k)
+            pressed.append(k)
+    finally:
+        for k in reversed(pressed):
+            try:
+                kb.release(k)
+            except Exception:
+                pass
 
 
 class ActionDispatcher:
@@ -102,8 +116,11 @@ class ActionDispatcher:
             return
 
         if "run" in action:
+            import shlex
             cmd = action["run"]
-            subprocess.Popen(cmd, shell=isinstance(cmd, str))
+            argv = shlex.split(cmd, posix=False) if isinstance(cmd, str) else [str(x) for x in cmd]
+            if argv:
+                subprocess.Popen(argv, shell=False)
             return
 
         if "obs" in action:

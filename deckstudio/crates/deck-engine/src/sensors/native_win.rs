@@ -78,15 +78,30 @@ impl Drop for NvmlHandle {
 
 impl NvmlHandle {
     fn try_open() -> Option<Self> {
+        let sys_root = std::env::var("SystemRoot").unwrap_or_else(|_| r"C:\Windows".into());
+        let prog_files = std::env::var("ProgramFiles").unwrap_or_else(|_| r"C:\Program Files".into());
+        let candidates = [
+            std::path::PathBuf::from(sys_root).join("System32").join("nvml.dll"),
+            std::path::PathBuf::from(prog_files)
+                .join("NVIDIA Corporation")
+                .join("NVSMI")
+                .join("nvml.dll"),
+        ];
         unsafe {
-            let lib = Library::new("nvml.dll").ok()?;
+            let lib = candidates
+                .into_iter()
+                .filter(|p| p.is_file())
+                .find_map(|p| Library::new(p).ok())?;
+            let shutdown: unsafe extern "C" fn() -> i32 = *lib.get::<unsafe extern "C" fn() -> i32>(b"nvmlShutdown\0").ok()?;
             let init: unsafe extern "C" fn() -> i32 = *lib.get::<unsafe extern "C" fn() -> i32>(b"nvmlInit_v2\0").ok()?;
             if init() != 0 {
                 return None;
             }
-            let shutdown: unsafe extern "C" fn() -> i32 = *lib.get::<unsafe extern "C" fn() -> i32>(b"nvmlShutdown\0").ok()?;
-            let get_dev: unsafe extern "C" fn(u32, *mut *mut c_void) -> i32 =
-                *lib.get::<unsafe extern "C" fn(u32, *mut *mut c_void) -> i32>(b"nvmlDeviceGetHandleByIndex_v2\0").ok()?;
+            let Ok(get_dev_sym) = lib.get::<unsafe extern "C" fn(u32, *mut *mut c_void) -> i32>(b"nvmlDeviceGetHandleByIndex_v2\0") else {
+                let _ = shutdown();
+                return None;
+            };
+            let get_dev = *get_dev_sym;
             let mut dev: *mut c_void = std::ptr::null_mut();
             if get_dev(0, &mut dev) != 0 || dev.is_null() {
                 let _ = shutdown();
@@ -177,8 +192,10 @@ impl NativeMonitor {
     }
 
     pub fn sample(&mut self, poll_nvml: bool) -> NativeSnapshot {
-        let mut snap = NativeSnapshot::default();
-        snap.cpu_util = self.sample_cpu();
+        let mut snap = NativeSnapshot {
+            cpu_util: self.sample_cpu(),
+            ..Default::default()
+        };
         let (ram_pct, ram_used) = sample_ram();
         snap.ram_util = ram_pct;
         snap.ram_used_mb = ram_used;
@@ -292,12 +309,19 @@ fn sample_net_octets() -> (u64, u64, u64, String) {
         if size == 0 {
             return (0, 0, 0, String::new());
         }
-        let mut buf = vec![0u8; size as usize];
-        let table_ptr = buf.as_mut_ptr() as *mut MIB_IFTABLE;
-        if GetIfTable(Some(table_ptr), &mut size, false) != 0 {
+        let words = (size as usize).div_ceil(4);
+        let mut aligned_buf = vec![0u32; words.max(1)];
+        let table_ptr = aligned_buf.as_mut_ptr() as *mut MIB_IFTABLE;
+        if GetIfTable(Some(table_ptr), &mut size, false) != 0 || (size as usize) < std::mem::size_of::<u32>() {
             return (0, 0, 0, String::new());
         }
         let num = (*table_ptr).dwNumEntries as usize;
+        if std::mem::size_of::<u32>()
+            + num.saturating_mul(std::mem::size_of::<windows::Win32::NetworkManagement::IpHelper::MIB_IFROW>())
+            > aligned_buf.len() * 4
+        {
+            return (0, 0, 0, String::new());
+        }
         let rows = std::slice::from_raw_parts((*table_ptr).table.as_ptr(), num);
         let mut rx: u64 = 0;
         let mut tx: u64 = 0;

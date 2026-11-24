@@ -63,9 +63,14 @@ fn try_read_map(map_name: &str) -> Option<Vec<HwinfoReading>> {
             &mut mbi,
             std::mem::size_of::<MEMORY_BASIC_INFORMATION>(),
         );
-        let parsed = if q > 0 && mbi.RegionSize >= std::mem::size_of::<HwinfoHeader>() {
-            let bytes = std::slice::from_raw_parts(view.Value as *const u8, mbi.RegionSize);
-            parse_hwinfo_bytes(bytes)
+        let parsed = if q > 0
+            && mbi.State == windows::Win32::System::Memory::MEM_COMMIT
+            && mbi.RegionSize >= std::mem::size_of::<HwinfoHeader>()
+        {
+            let cap = mbi.RegionSize.min(4_194_304);
+            let mut buf = vec![0u8; cap];
+            std::ptr::copy_nonoverlapping(view.Value as *const u8, buf.as_mut_ptr(), cap);
+            parse_hwinfo_bytes(&buf)
         } else {
             None
         };
@@ -85,7 +90,7 @@ fn parse_hwinfo_bytes(bytes: &[u8]) -> Option<Vec<HwinfoReading>> {
     }
     let r_off = hdr.dw_offset_reading_section as usize;
     let r_sz = hdr.dw_size_reading_element as usize;
-    let r_num = hdr.dw_num_reading_elements as usize;
+    let r_num = (hdr.dw_num_reading_elements as usize).min(8192);
     // Reading struct: dwReadingType(4) + dwSensorIndex(4) + dwReadingID(4) + szLabelOrig(128) + szLabelUser(128) + szUnit(16) + Value(f64)
     if r_sz < 292 || r_off.checked_add(r_sz.checked_mul(r_num)?)? > bytes.len() {
         return None;

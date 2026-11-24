@@ -565,10 +565,11 @@ dependencies = [
 
 [[package]]
 name = "deck-studio"
-version = "0.1.0"
+version = "0.4.4"
 dependencies = [
  "serde",
  "serde_json",
+ "sha2 0.10.9",
  "tauri",
  "tauri-build",
 ]
